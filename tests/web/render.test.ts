@@ -161,6 +161,12 @@ describe("renderTeams", () => {
     expect(team.style.getPropertyValue("--team-color")).toBe("#EF6400");
   });
 
+  it("LTK 関連の配信をしているかを data-ltk で示す", () => {
+    const root = render();
+    expect(card(root, "配信中の人").dataset.ltk).toBe("true");
+    expect(card(root, "配信していない人").dataset.ltk).toBe("false");
+  });
+
   it("配信中の選手カードにだけ LIVE バッジを付ける（AC-5）", () => {
     const root = render();
     expect(card(root, "配信中の人").querySelector(".live-badge")?.textContent).toBe("LIVE");

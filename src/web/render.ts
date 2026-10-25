@@ -1,4 +1,4 @@
-import { isPlayerLive, type TeamView } from "../shared/filter";
+import { hasLtkStream, isPlayerLive, type TeamView } from "../shared/filter";
 import { isStale } from "../shared/stale";
 import { ROLES, type ChannelStatus, type Platform, type PlayerStatus, type Role } from "../shared/types";
 import { externalLink, h } from "./dom";
@@ -92,7 +92,8 @@ function renderPlayerCard(player: PlayerStatus): HTMLElement {
   const live = isPlayerLive(player);
   return h(
     "article",
-    { class: "player-card", "data-live": String(live), "data-role": player.role },
+    // data-ltk で、LTK 関連の配信とそれ以外の配信の枠を分ける
+    { class: "player-card", "data-live": String(live), "data-ltk": String(hasLtkStream(player)), "data-role": player.role },
     h(
       "div",
       { class: "card-head" },

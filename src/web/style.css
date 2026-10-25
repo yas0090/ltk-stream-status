@@ -295,7 +295,17 @@ a {
   background: var(--surface);
 }
 
+/* 配信していない選手はわずかに灰色にする */
+.player-card[data-live="false"] {
+  background: color-mix(in srgb, var(--text-muted) 7%, var(--surface));
+}
+
+/* 配信中: LTK 関連は赤の太枠、それ以外は薄い赤の細枠 */
 .player-card[data-live="true"] {
+  border-color: color-mix(in srgb, var(--live) 45%, var(--surface));
+}
+
+.player-card[data-live="true"][data-ltk="true"] {
   border-color: var(--live);
   box-shadow: 0 0 0 1px var(--live);
 }
