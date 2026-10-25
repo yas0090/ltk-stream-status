@@ -14,22 +14,485 @@
 #     YouTube: platform: youtube と  channelId: UC で始まる24文字のチャンネル ID
 #              （チャンネルページの「概要」→「チャンネルを共有」→「チャンネル ID をコピー」で確認できる）
 #
-# 以下はサンプル。実際の出場者データに置き換える
+# 出典: FISTBUMP「LTK シーズン: フィナーレ」全メンバーまとめ（2026-10-07）、チャンネルは FollowBoard の配信者ページ（2026-10-25 確認）
 teams:
-  - id: sample-team
-    name: サンプルチーム
+  - id: dahlia-diadem
+    name: Dahlia Diadem
     players:
-      - name: サンプル選手1
-        tier: Next
+      - name: Washidai
+        tier: Masters
         role: TOP
         channels:
           - platform: twitch
-            login: sample_player_1
-      - name: サンプル選手2
+            login: washidai_
+          - platform: youtube
+            channelId: UCEdHoWFZ8vnFDUeX4s9TLRg  # わしだいちゃんねる
+      - name: しゃるる
+        tier: Masters
+        role: JG
+        channels:
+          - platform: twitch
+            login: syaruru3
+          - platform: youtube
+            channelId: UC5SYDKMBeExdFs0ocWiK6xw  # しゃるるch
+      - name: たぬき忍者
+        tier: Masters
+        role: MID
+        channels:
+          - platform: twitch
+            login: tanukininja
+          - platform: youtube
+            channelId: UCoRRbpIgKwqc3ojlqXCBi9A  # たぬき忍者チャンネル
+      - name: Day1
+        tier: Masters
+        role: ADC
+        channels:
+          - platform: twitch
+            login: day1lol
+      - name: hetel
+        tier: Masters
+        role: SUP
+        channels:
+          - platform: twitch
+            login: heteeel
+          - platform: youtube
+            channelId: UC6mS7KRNUng-bTnArjnntKQ  # hetel ch /へてる
+      - name: 酒寄颯馬
+        tier: Core
+        role: TOP
+        channels:
+          - platform: youtube
+            channelId: UCkQ8i_cz0prqdo9jj__L93Q  # 酒寄颯馬 / Sakayori Soma【にじさんじ】
+      - name: きなこ
+        tier: Core
+        role: JG
+        channels:
+          - platform: twitch
+            login: kinapoppo
+          - platform: youtube
+            channelId: UCrWkFUu3DK5XpYBUPDC5uLA  # kinako
+      - name: スタンミじゃぱん
         tier: Core
         role: MID
         channels:
           - platform: twitch
-            login: sample_player_2
+            login: sutanmi
           - platform: youtube
-            channelId: UCxxxxxxxxxxxxxxxxxxxxxx
+            channelId: UCcGSTI830YkwaocFV31Q7MA  # スタンミ
+      - name: じゃすぱー
+        tier: Core
+        role: ADC
+        channels:
+          - platform: twitch
+            login: jasper7se
+          - platform: youtube
+            channelId: UCzAMU5Kgj8fGxVtcwTcq-_g  # じゃすぱーちゃんねる
+      - name: 神楽めあ
+        tier: Core
+        role: SUP
+        channels:
+          - platform: twitch
+            login: kagura0mea
+          - platform: youtube
+            channelId: UCWCc8tO-uUl_7SJXIKJACMw  # 神楽めあ / KaguraMea
+      - name: SHAKA
+        tier: Next
+        role: TOP
+        channels:
+          - platform: twitch
+            login: fps_shaka
+          - platform: youtube
+            channelId: UCjg5-lUiUzdmzzBRY9Xqrhw  # SHAKAch
+      - name: MOTHER3
+        tier: Next
+        role: JG
+        channels:
+          - platform: twitch
+            login: mother3rd
+          - platform: youtube
+            channelId: UCXEW13qpntV7pacu0Kz-9yA  # MOTHER3rd
+      - name: 天ノ川ねる
+        tier: Next
+        role: MID
+        channels:
+          - platform: twitch
+            login: amanogawaneru
+          - platform: youtube
+            channelId: UCqqFWMbmKQOlAmL5Bvmw-lw  # 天ノ川ねる
+      - name: 夢野あかり
+        tier: Next
+        role: ADC
+        channels:
+          - platform: twitch
+            login: akarindao
+          - platform: youtube
+            channelId: UCS5l_Y0oMVTjEos2LuyeSZQ  # Akari ch.夢野あかり
+      - name: 白波らむね
+        tier: Next
+        role: SUP
+        channels:
+          - platform: twitch
+            login: ramuneshiranami
+          - platform: youtube
+            channelId: UC61OwuYOVuKkpKnid-43Twg  # 白波らむね / Shiranami Ramune
+  - id: camellia-crown
+    name: Camellia Crown
+    players:
+      - name: Yutapon
+        tier: Masters
+        role: TOP
+        channels:
+          - platform: twitch
+            login: yutapongo
+          - platform: youtube
+            channelId: UC_Cl01s57y973zXBQvlqPTA  # Yutapon
+      - name: Rainbrain
+        tier: Masters
+        role: JG
+        channels:
+          - platform: twitch
+            login: rainbrain
+          - platform: youtube
+            channelId: UClE0LRvL2uD4lgne7VAX22w  # Rainbrain
+      - name: Ceros
+        tier: Masters
+        role: MID
+        channels:
+          - platform: twitch
+            login: ceros127
+          - platform: youtube
+            channelId: UC3oYqJcGWTBvCWtleRTAuEA  # Ceros Official
+      - name: Yuhi
+        tier: Masters
+        role: ADC
+        channels:
+          - platform: twitch
+            login: yuhilolz
+          - platform: youtube
+            channelId: UCQaTIu9wSWeEy4rLnLzZdYA  # Yuhi ちゃんねる
+      - name: NEMOH
+        tier: Masters
+        role: SUP
+        channels:
+          - platform: twitch
+            login: nemoh0918
+          - platform: youtube
+            channelId: UCxkXigSWkBQY93ruo1l8iqw  # 弱者ネ申 Nemoh
+      - name: ゆきお
+        tier: Core
+        role: TOP
+        channels:
+          - platform: twitch
+            login: yukiofps14
+          - platform: youtube
+            channelId: UCn85IB3kxNMo993oPNDKpuA  # ゆきお
+      - name: k4sen
+        tier: Core
+        role: JG
+        channels:
+          - platform: twitch
+            login: k4sen
+          - platform: youtube
+            channelId: UChUjERVG8eKEAJSCef-tTmg  # k4sen / かせん
+      - name: 葛葉
+        tier: Core
+        role: MID
+        channels:
+          - platform: youtube
+            channelId: UCSFCh5NL4qXrAy9u-u2lX3g  # Kuzuha Channel
+      - name: 龍巻ちせ
+        tier: Core
+        role: ADC
+        channels:
+          - platform: youtube
+            channelId: UCoW8qQy80mKH0RJTKAK-nNA  # 龍巻ちせ / Tatsumaki Chise
+      - name: 昏昏アリア
+        tier: Core
+        role: SUP
+        channels:
+          - platform: twitch
+            login: aria_konkon
+          - platform: youtube
+            channelId: UCo6mwsozDGMW0UNGowBJGhg  # 昏昏アリア / Konkon Aria
+      - name: 叶
+        tier: Next
+        role: TOP
+        channels:
+          - platform: twitch
+            login: kanae_2434
+          - platform: youtube
+            channelId: UCspv01oxUFf_MTSipURRhkA  # Kanae Channel
+      - name: ゆふな
+        tier: Next
+        role: JG
+        channels:
+          - platform: twitch
+            login: yufuna
+          - platform: youtube
+            channelId: UCLKWaeDR1TYpgbx5xn9rojA  # yufuna
+      - name: 空澄セナ
+        tier: Next
+        role: MID
+        channels:
+          - platform: twitch
+            login: asumisena
+          - platform: youtube
+            channelId: UCF_U2GCKHvDz52jWdizppIA  # 空澄セナ -Asumi Sena-
+      - name: 獅子堂あかり
+        tier: Next
+        role: ADC
+        channels:
+          - platform: twitch
+            login: shishidoakari
+          - platform: youtube
+            channelId: UCWRPqA0ehhWV4Hnp27PJCkQ  # 獅子堂 あかり / Shishido Akari【にじさんじ】
+      - name: 鷹宮リオン
+        tier: Next
+        role: SUP
+        channels:
+          - platform: twitch
+            login: takamiyarion
+          - platform: youtube
+            channelId: UCV5ZZlLjk5MKGg3L0n0vbzw  # 鷹宮リオン / Rion Takamiya
+  - id: iris-tiara
+    name: Iris Tiara
+    players:
+      - name: らいじん
+        tier: Masters
+        role: TOP
+        channels:
+          - platform: twitch
+            login: alfrea
+          - platform: youtube
+            channelId: UCvXYV_0wzcxMnH_J4HCZxBw  # らいじん
+      - name: Yunika
+        tier: Masters
+        role: JG
+        channels:
+          - platform: twitch
+            login: yunika1
+          - platform: youtube
+            channelId: UCtuXxmTtrBvOCMAiSMlOqoA  # ゆにかちゃんねる
+      - name: Eugeo
+        tier: Masters
+        role: MID
+        channels:
+          - platform: twitch
+            login: eugeoja
+          - platform: youtube
+            channelId: UCmZKJG2_Q72_PrvvgJF-sSA  # Eugeo ch
+      - name: Zerost
+        tier: Masters
+        role: ADC
+        channels:
+          - platform: twitch
+            login: zerost_s
+          - platform: youtube
+            channelId: UCBtAasNQYblmWPx1R77tcEA  # Zerost Channel
+      - name: Enty
+        tier: Masters
+        role: SUP
+        channels:
+          - platform: twitch
+            login: entych
+          - platform: youtube
+            channelId: UCWCNac9zs-Ikaia7a9QkM0Q  # えんてぃ / Enty
+      - name: mittiii
+        tier: Core
+        role: TOP
+        channels:
+          - platform: twitch
+            login: im_mittiii
+          - platform: youtube
+            channelId: UCYX2lGNvaS9LN2vkwJn7lEA  # mittiii 【みっちー】
+      - name: AlphaAzur
+        tier: Core
+        role: JG
+        channels:
+          - platform: twitch
+            login: alphaazur
+          - platform: youtube
+            channelId: UCdlxcNp-rmCrIfZwORXr0Og  # Alpha Azur - UltraLMTM
+      - name: たかやスペシャル
+        tier: Core
+        role: MID
+        channels:
+          - platform: twitch
+            login: takayaspecial
+          - platform: youtube
+            channelId: UCe7SMZorzWzJ_0OobFxHSig  # たかやスペシャル
+      - name: ごんかね
+        tier: Core
+        role: ADC
+        channels:
+          - platform: twitch
+            login: kanegon1
+          - platform: youtube
+            channelId: UCYKIyuCeqJbk8uwlplueR9A  # ごんかね
+      - name: レグルシュ・ライオンハート
+        tier: Core
+        role: SUP
+        channels:
+          - platform: twitch
+            login: reglushlionheart
+          - platform: youtube
+            channelId: UCuycJ_IsA5ESbTYhe05ozqQ  # レグルシュ・ライオンハートReglush Lionheart
+      - name: 橘ひなの
+        tier: Next
+        role: TOP
+        channels:
+          - platform: twitch
+            login: hinanotachiba7
+          - platform: youtube
+            channelId: UCvUc0m317LWTTPZoBQV479A  # 橘ひなの / Hinano Tachibana
+      - name: ありけん
+        tier: Next
+        role: JG
+        channels:
+          - platform: twitch
+            login: arikendebu
+          - platform: youtube
+            channelId: UC3NHhO0wBaZ5OVxaabcDKrw  # ありけん【クラスに一人はいそうなデブCh】
+      - name: まいたけ
+        tier: Next
+        role: MID
+        channels:
+          - platform: twitch
+            login: kinotake00
+          - platform: youtube
+            channelId: UCgIHvyZWE6Ny7pfRpya86Yw  # まいたけ -Maitake-
+      - name: 天帝フォルテ
+        tier: Next
+        role: ADC
+        channels:
+          - platform: twitch
+            login: tentei_forte
+          - platform: youtube
+            channelId: UC8hwewh9svh92E1gXvgVazg  # 天帝フォルテ / Tentei Forte
+      - name: 白那しずく
+        tier: Next
+        role: SUP
+        channels:
+          - platform: twitch
+            login: shirona_shizuku
+          - platform: youtube
+            channelId: UCAHQGIKolfBfoeXXMY79SBA  # 白那しずく
+  - id: laurel-regalia
+    name: Laurel Regalia
+    players:
+      - name: apaMEN
+        tier: Masters
+        role: TOP
+        channels:
+          - platform: twitch
+            login: apamenlol
+      - name: Nesty
+        tier: Masters
+        role: JG
+        channels:
+          - platform: twitch
+            login: nesu_kun
+          - platform: youtube
+            channelId: UC4oBKUsRAQXj5osB66hb5GQ  # ねすてぃー
+      - name: Recap
+        tier: Masters
+        role: MID
+        channels:
+          - platform: twitch
+            login: recaplol1
+          - platform: youtube
+            channelId: UCvmJXQEYV7Z1cBsWqGdW5IQ  # Recap / りきゃっぷ LOL
+      - name: Haretti
+        tier: Masters
+        role: ADC
+        channels:
+          - platform: twitch
+            login: haretti
+          - platform: youtube
+            channelId: UCulhH1Et8Yu16SQqauhEAbA  # ハレっちゃんねる
+      - name: ThintoN
+        tier: Masters
+        role: SUP
+        channels:
+          - platform: twitch
+            login: thintonlol
+      - name: 焼きパン
+        tier: Core
+        role: TOP
+        channels:
+          - platform: twitch
+            login: varvalian
+          - platform: youtube
+            channelId: UCNzyH3uRL8N3AbOmDdRfP8Q  # 焼きパン
+      - name: Killin9Hit
+        tier: Core
+        role: JG
+        channels:
+          - platform: twitch
+            login: killin9hit
+          - platform: youtube
+            channelId: UCMEI4RcffOJZUuYIVcim8Zw  # KH / Killin9Hit
+      - name: 乾伸一郎
+        tier: Core
+        role: MID
+        channels:
+          - platform: twitch
+            login: ninja_inui
+          - platform: youtube
+            channelId: UC8QEgcJgjrJWy4B43aXxsAQ  # 乾ちゃんねる
+      - name: 大御所にゅん子
+        tier: Core
+        role: ADC
+        channels:
+          - platform: twitch
+            login: nyunkoro
+          - platform: youtube
+            channelId: UCo-RoINNq4eLoj9BzsLBFbQ  # 大御所にゅん子
+      - name: 千燈ゆうひ
+        tier: Core
+        role: SUP
+        channels:
+          - platform: twitch
+            login: sendo_yuuhi
+          - platform: youtube
+            channelId: UCuDY3ibSP2MFRgf7eo3cojg  # 千燈ゆうひ
+      - name: 狐白うる
+        tier: Next
+        role: TOP
+        channels:
+          - platform: twitch
+            login: kohaku_uru
+          - platform: youtube
+            channelId: UCCrjg1JckfPBhDcU0qP1AqQ  # 狐白うる / Kohaku Uru - UltraLMTM
+      - name: アステル・レダ
+        tier: Next
+        role: JG
+        channels:
+          - platform: youtube
+            channelId: UCNVEsYbiZjH5QLmGeSgTSzg  # astel ch.アステル
+      - name: 春茶
+        tier: Next
+        role: MID
+        channels:
+          - platform: twitch
+            login: ninzintabemasu
+          - platform: youtube
+            channelId: UChNxH3wxiElBSAdAyMfNhJQ  # 春茶
+          - platform: youtube
+            channelId: UC4X6IkoRWN_1YzXske2vOVg  # いろいろはるちゃ。
+      - name: なぎさっち
+        tier: Next
+        role: ADC
+        channels:
+          - platform: twitch
+            login: nagisatty
+          - platform: youtube
+            channelId: UCcLJTOs5AMGatYueTtJWeOg  # なぎさっち
+      - name: とおこ
+        tier: Next
+        role: SUP
+        channels:
+          - platform: twitch
+            login: urs_toko
+          - platform: youtube
+            channelId: UCg8-ZOExFxonnHTaK9aYznQ  # とおこ

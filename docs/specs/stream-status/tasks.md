@@ -64,7 +64,7 @@
   - schedule（`*/5 * * * *`）、push、workflow_dispatch、`concurrency`、テスト → 生成 → ビルド → Pages へデプロイ
 - [x] 5-3. 成果物に秘密情報が含まれないことを確かめる処理を、ワークフローに加える（AC-26）
   - `dist/` を Secrets の値で grep し、見つかったら失敗させる
-- [ ] 5-4. GitHub の設定（ユーザーが行う。手順を案内する）
+- [x] 5-4. GitHub の設定（ユーザーが行う。手順を案内する）
   - 公開リポジトリの作成、Pages のソースを GitHub Actions にする、Secrets の登録、Secret scanning と Push protection の有効化、YouTube キーの API 制限
 - [ ] 5-5. 公開後に確かめる（AC-21, AC-24, AC-25）
   - Actions の実行履歴で 5 分ごとに動いていること
