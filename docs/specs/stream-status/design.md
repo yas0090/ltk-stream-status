@@ -62,6 +62,7 @@ GitHub Actions と Pages を無料で使うため、リポジトリは公開す�
 teams:                      # 書いた順がチームの表示順（AC-2）
   - id: team-a              # 英数字とハイフン。絞り込みの識別に使う
     name: チームA
+    color: "#EF6400"        # チームカラー（LTK 公式サイトの CORE の色、AC-28）
     players:                # 書く順は自由（表示は階級・ロールで並び替える）
       - name: 選手1
         tier: Next          # Next | Core | Masters
@@ -82,7 +83,7 @@ ltkKeywords:
 
 ### 検証ルール（AC-23）
 
-- 必須項目: チームの `id` と `name`、選手の `name`・`tier`・`role`、1 つ以上の `channels`
+- 必須項目: チームの `id`・`name`・`color`（`#RRGGBB` 形式）、選手の `name`・`tier`・`role`、1 つ以上の `channels`
 - `tier` と `role` は上の列挙値だけを許す
 - `twitch` は `login`（英数字とアンダースコアで 25 文字以内）、`youtube` は `channelId`（`UC` で始まる 24 文字）を必須にする
 - 定義にないキーはエラーにする（書き間違いが無視されるのを防ぐ）
@@ -98,6 +99,7 @@ type SiteData = {
   teams: {
     id: string;
     name: string;
+    color: string;              // チームカラー（AC-28）
     players: {
       name: string;
       tier: "Next" | "Core" | "Masters";
@@ -217,6 +219,23 @@ PC（幅 720px 以上）: 列 = ロール、行 = 階級
   3. 配信タイトル行。配信中なら LTK タグと配信タイトル（配信ページへのリンク）を 1 行で表示し、収まらない部分は省略記号にする。配信していないときは空行、取得に失敗したときは「取得失敗」と表示する（AC-7, AC-22）
 - **同時に複数配信している場合**（AC-8）: タイトル行には最初の配信のタイトルと「+1」のような残りの件数を表示する。すべてのタイトルはツールチップで見られ、各配信へは配信中のアイコンから移動できる
 - **配信中の強調**: 配信中の選手カードは背景をわずかに色付けし、目立たせる
+
+### チームカラーとロールアイコン（2026-10-25 追加）
+
+- **チームカラー**（AC-28）: [LTK 公式サイト](https://league.thek4sen.com/Finale_Playoffs/) の各チームの CORE の色を使う。teams.yaml の `color` に書き、site-data.json を経由して CSS 変数 `--team-color` としてチームのカードに渡す
+
+  | チーム | 色 |
+  |---|---|
+  | Dahlia Diadem | `#EF6400` |
+  | Camellia Crown | `#D10015` |
+  | Iris Tiara | `#0046DC` |
+  | Laurel Regalia | `#00A032` |
+
+  - チームのカードは、見出し部分をチームカラーで塗り（文字は白）、枠線もチームカラーにする
+  - 階級の見出しと選手カードの枠線は、チームカラーを薄めた色にする
+- **配信中の表示**: Camellia Crown のチームカラーが赤で、配信中の赤と紛らわしい。そのため配信中は、色だけでなく選手カードの右上に「LIVE」バッジを付けて示す（AC-5）。アイコン画像の赤い枠と、薄い赤の背景は残す
+- **ロールアイコン**（AC-29）: LoL 公式のポジションアイコン（CommunityDragon で配布されている `icon-position-{top,jungle,middle,bottom,utility}.png`）をリポジトリに同梱する。CSS の `mask-image` で使い、色はテーマに合わせる。PC ではロールの列見出しに、スマートフォンでは選手カードのロール名の横に表示する
+- **免責表示**（AC-30）: ページ下部に、非公式のファンサイトであること、データの出典、Riot Games の免責文（Riot の「Legal Jibber Jabber」に沿った文言）を載せる
 
 ### 絞り込み（AC-15〜19）
 

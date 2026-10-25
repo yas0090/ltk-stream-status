@@ -16,6 +16,7 @@ const teamsData = (playerName = "選手1") =>
       {
         id: "team-a",
         name: "チームA",
+        color: "#EF6400",
         players: [
           {
             name: playerName,
@@ -55,6 +56,7 @@ describe("generateSiteData", () => {
         {
           id: "team-a",
           name: "チームA",
+          color: "#EF6400",
           players: [
             {
               name: "選手1",
@@ -162,12 +164,12 @@ describe("main（AC-23）", () => {
   };
 
   it("検証エラーなら終了コード 1 で終え、問題の場所を出力する", async () => {
-    const yaml = "teams:\n  - id: a\n    name: A\n    players:\n      - name: x\n        tier: Pro\n        role: TOP\n        channels:\n          - platform: twitch\n            login: x\n";
+    const yaml = "teams:\n  - id: a\n    name: A\n    color: \"#EF6400\"\n    players:\n      - name: x\n        tier: Pro\n        role: TOP\n        channels:\n          - platform: twitch\n            login: x\n";
     await expect(runMain(yaml)).rejects.toMatchObject({ code: 1, stderr: expect.stringMatching(/players\.0\.tier/) });
   }, 30_000);
 
   it("必要な環境変数がなければ終了コード 1 で終える", async () => {
-    const yaml = "teams:\n  - id: a\n    name: A\n    players:\n      - name: x\n        tier: Next\n        role: TOP\n        channels:\n          - platform: twitch\n            login: x\n";
+    const yaml = "teams:\n  - id: a\n    name: A\n    color: \"#EF6400\"\n    players:\n      - name: x\n        tier: Next\n        role: TOP\n        channels:\n          - platform: twitch\n            login: x\n";
     await expect(runMain(yaml)).rejects.toMatchObject({ code: 1, stderr: expect.stringMatching(/TWITCH_CLIENT_ID/) });
   }, 30_000);
 

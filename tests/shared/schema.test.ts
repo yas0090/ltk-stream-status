@@ -12,7 +12,7 @@ const player = (overrides: Record<string, unknown> = {}) => ({
 });
 
 const teams = (players: unknown[], extraTeams: unknown[] = []) => ({
-  teams: [{ id: "team-a", name: "チームA", players }, ...extraTeams],
+  teams: [{ id: "team-a", name: "チームA", color: "#EF6400", players }, ...extraTeams],
 });
 
 describe("parseTeamsData（AC-23）", () => {
@@ -44,8 +44,15 @@ describe("parseTeamsData（AC-23）", () => {
   });
 
   it("チームの id か name が欠けているとエラー", () => {
-    expect(() => parseTeamsData({ teams: [{ name: "A", players: [] }] })).toThrow(DataValidationError);
-    expect(() => parseTeamsData({ teams: [{ id: "a", players: [] }] })).toThrow(DataValidationError);
+    expect(() => parseTeamsData({ teams: [{ name: "A", color: "#000000", players: [] }] })).toThrow(DataValidationError);
+    expect(() => parseTeamsData({ teams: [{ id: "a", color: "#000000", players: [] }] })).toThrow(DataValidationError);
+  });
+
+  it("チームカラーが欠けているか #RRGGBB 形式でなければエラー（AC-28）", () => {
+    expect(() => parseTeamsData({ teams: [{ id: "a", name: "A", players: [] }] })).toThrow(DataValidationError);
+    for (const color of ["red", "#FFF", "EF6400", "#GG0000"]) {
+      expect(() => parseTeamsData({ teams: [{ id: "a", name: "A", color, players: [] }] })).toThrow(/#RRGGBB/);
+    }
   });
 
   it("定義外の階級・ロールはエラー", () => {
@@ -61,13 +68,13 @@ describe("parseTeamsData（AC-23）", () => {
   it("別のチームなら同じ階級とロールでもよい", () => {
     const data = teams(
       [player()],
-      [{ id: "team-b", name: "チームB", players: [player({ channels: [{ platform: "twitch", login: "p2" }] })] }],
+      [{ id: "team-b", name: "チームB", color: "#D10015", players: [player({ channels: [{ platform: "twitch", login: "p2" }] })] }],
     );
     expect(() => parseTeamsData(data)).not.toThrow();
   });
 
   it("チーム id が重複するとエラー", () => {
-    const data = teams([], [{ id: "team-a", name: "チームB", players: [] }]);
+    const data = teams([], [{ id: "team-a", name: "チームB", color: "#D10015", players: [] }]);
     expect(() => parseTeamsData(data)).toThrow(/team-a/);
   });
 

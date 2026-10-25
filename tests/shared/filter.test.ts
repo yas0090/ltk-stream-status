@@ -23,6 +23,7 @@ const teams: TeamStatus[] = [
   {
     id: "a",
     name: "A",
+    color: "#EF6400",
     players: [
       player("a-next-top", "Next", "TOP", [live(true)]),
       player("a-core-top", "Core", "TOP", [offline, live(false)]),
@@ -32,6 +33,7 @@ const teams: TeamStatus[] = [
   {
     id: "b",
     name: "B",
+    color: "#D10015",
     players: [player("b-next-top", "Next", "TOP", [failed]), player("b-masters-top", "Masters", "TOP", [live(true)])],
   },
 ];

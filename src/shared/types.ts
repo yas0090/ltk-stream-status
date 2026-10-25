@@ -36,6 +36,8 @@ export type PlayerStatus = {
 export type TeamStatus = {
   id: string;
   name: string;
+  // チームカラー（AC-28）
+  color: string;
   players: PlayerStatus[];
 };
 

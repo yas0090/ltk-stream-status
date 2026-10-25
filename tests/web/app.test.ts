@@ -11,6 +11,7 @@ const siteData = (generatedAt: Date, title = "LTK 練習"): SiteData => ({
     {
       id: "a",
       name: "チームA",
+      color: "#EF6400",
       players: [
         {
           name: "選手1",
@@ -57,6 +58,13 @@ describe("createApp（AC-10）", () => {
     const root = await start(async () => siteData(T0));
     expect(root.querySelector(".stream-link")?.textContent).toBe("LTK 練習");
     expect(root.querySelector("time")?.getAttribute("datetime")).toBe(T0.toISOString());
+  });
+
+  it("ページ下部に非公式である旨と Riot Games の免責表示を載せる（AC-30）", async () => {
+    const root = await start(async () => siteData(T0));
+    const footer = root.querySelector("footer")?.textContent ?? "";
+    expect(footer).toContain("非公式のファンサイト");
+    expect(footer).toContain("Riot Games の承認を受けたものではなく");
   });
 
   it("5分ごとにデータを読み直す", async () => {

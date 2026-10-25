@@ -1,10 +1,13 @@
 import { isPlayerLive, type TeamView } from "../shared/filter";
 import { isStale } from "../shared/stale";
-import { ROLES, type ChannelStatus, type Platform, type PlayerStatus } from "../shared/types";
+import { ROLES, type ChannelStatus, type Platform, type PlayerStatus, type Role } from "../shared/types";
 import { externalLink, h } from "./dom";
 import { platformIcon } from "./icons";
 
 const PLATFORM_LABEL: Record<Platform, string> = { twitch: "Twitch", youtube: "YouTube" };
+
+// LoL 公式のポジションアイコン（AC-29）。画像は CSS の mask-image で表示する
+const roleIcon = (role: Role) => h("span", { class: `role-icon role-icon--${role.toLowerCase()}`, "aria-hidden": "true" });
 
 export const formatUpdatedAt = (generatedAt: string) =>
   new Date(generatedAt).toLocaleString("ja-JP", {
@@ -96,9 +99,11 @@ function renderPlayerCard(player: PlayerStatus): HTMLElement {
       renderAvatar(player),
       h("span", { class: "live-mark", role: "img", "aria-label": live ? "配信中" : "配信していない" }),
       h("span", { class: "player-name", title: player.name }, player.name),
+      // チームカラーの赤と区別できるよう、配信中は色だけでなくバッジでも示す（AC-5）
+      live && h("span", { class: "live-badge" }, "LIVE"),
     ),
     // ロール名はスマートフォンでだけ表示する（PC では列の見出しでわかる）
-    h("div", { class: "platforms" }, player.channels.map(renderPlatformLink), h("span", { class: "role" }, player.role)),
+    h("div", { class: "platforms" }, player.channels.map(renderPlatformLink), h("span", { class: "role" }, roleIcon(player.role), player.role)),
     renderStreamLine(player),
   );
 }
@@ -107,12 +112,18 @@ function renderPlayerCard(player: PlayerStatus): HTMLElement {
 function renderTeam(team: TeamView): HTMLElement {
   return h(
     "section",
-    { class: "team", "data-team": team.id },
+    // チームカラーは検証済みの #RRGGBB なので、そのまま CSS 変数に渡せる（AC-28）
+    { class: "team", "data-team": team.id, style: `--team-color: ${team.color}` },
     h("h2", { class: "team-name" }, team.name),
     h(
       "div",
       { class: "team-grid" },
-      h("div", { class: "role-header", "aria-hidden": "true" }, h("span", {}), ROLES.map((role) => h("span", {}, role))),
+      h(
+        "div",
+        { class: "role-header", "aria-hidden": "true" },
+        h("span", {}),
+        ROLES.map((role) => h("span", {}, roleIcon(role), role)),
+      ),
       team.tiers.map((group) =>
         h(
           "div",

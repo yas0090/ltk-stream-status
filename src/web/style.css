@@ -171,14 +171,20 @@ a {
 }
 
 .team {
-  padding: 12px 16px 16px;
-  border: 1px solid var(--border);
+  --team-color: var(--text-muted);
+  --team-border: color-mix(in srgb, var(--team-color) 35%, var(--border));
+  overflow: hidden;
+  border: 2px solid var(--team-color);
   border-radius: 12px;
   background: var(--surface);
 }
 
+/* 見出しをチームカラーで塗る（AC-28） */
 .team-name {
-  margin: 0 0 8px;
+  margin: 0;
+  padding: 8px 16px;
+  background: var(--team-color);
+  color: #ffffff;
   font-size: 1.125rem;
 }
 
@@ -187,6 +193,7 @@ a {
   display: grid;
   grid-template-columns: 4.5rem repeat(5, minmax(0, 1fr));
   gap: 8px;
+  padding: 12px 16px 16px;
 }
 
 .role-header,
@@ -195,15 +202,20 @@ a {
 }
 
 .role-header span {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
   color: var(--text-muted);
   font-size: 0.75rem;
   font-weight: 600;
-  text-align: center;
 }
 
 .tier-name {
   align-self: center;
   margin: 0;
+  padding-left: 8px;
+  border-left: 3px solid var(--team-color);
   color: var(--text-muted);
   font-size: 0.8125rem;
   font-weight: 600;
@@ -223,17 +235,68 @@ a {
   gap: 6px;
   min-width: 0;
   padding: 8px 10px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--team-border);
   background: var(--surface);
 }
 
 .player-card[data-live="true"] {
-  border-color: color-mix(in srgb, var(--live) 45%, var(--border));
+  border-color: var(--live);
   background: color-mix(in srgb, var(--live) 7%, var(--surface));
 }
 
 .slot-empty {
-  border: 1px dashed var(--border);
+  border: 1px dashed var(--team-border);
+}
+
+/* チームカラーの赤と区別できるよう、配信中はバッジでも示す（AC-5） */
+.live-badge {
+  flex: none;
+  margin-left: auto;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--live);
+  color: #ffffff;
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 16px;
+}
+
+/* LoL 公式のポジションアイコン（AC-29）。色はテーマに合わせる */
+.role-icon {
+  display: inline-block;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  background: currentColor;
+  vertical-align: -2px;
+  -webkit-mask: center / contain no-repeat;
+  mask: center / contain no-repeat;
+}
+
+.role-icon--top {
+  -webkit-mask-image: url("./assets/roles/top.png");
+  mask-image: url("./assets/roles/top.png");
+}
+
+.role-icon--jg {
+  -webkit-mask-image: url("./assets/roles/jungle.png");
+  mask-image: url("./assets/roles/jungle.png");
+}
+
+.role-icon--mid {
+  -webkit-mask-image: url("./assets/roles/middle.png");
+  mask-image: url("./assets/roles/middle.png");
+}
+
+.role-icon--adc {
+  -webkit-mask-image: url("./assets/roles/bottom.png");
+  mask-image: url("./assets/roles/bottom.png");
+}
+
+.role-icon--sup {
+  -webkit-mask-image: url("./assets/roles/utility.png");
+  mask-image: url("./assets/roles/utility.png");
 }
 
 .card-head {
@@ -291,6 +354,8 @@ a {
 .role {
   display: none;
   flex: none;
+  align-items: center;
+  gap: 3px;
   margin-left: auto;
   color: var(--text-muted);
   font-size: 0.6875rem;
@@ -380,14 +445,28 @@ a {
   text-align: center;
 }
 
+/* 免責表示（AC-30） */
+.site-footer {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.site-footer p {
+  margin: 0 0 8px;
+}
+
 /* スマートフォン: 階級ごとに選手カードを2列で折り返す */
 @media (max-width: 719px) {
-  .team {
-    padding: 12px;
+  .team-name {
+    padding: 8px 12px;
   }
 
   .team-grid {
     display: block;
+    padding: 4px 12px 12px;
   }
 
   .role-header,
@@ -407,6 +486,6 @@ a {
   }
 
   .role {
-    display: inline;
+    display: inline-flex;
   }
 }

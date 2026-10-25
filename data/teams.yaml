@@ -7,6 +7,7 @@
 # 項目
 #   id       チームの識別子。英小文字・数字・ハイフンだけ
 #   name     チーム名
+#   color    チームカラー。#RRGGBB 形式（LTK 公式サイトの CORE の色）
 #   tier     Next / Core / Masters
 #   role     TOP / JG / MID / ADC / SUP
 #   channels 1つ以上
@@ -18,6 +19,7 @@
 teams:
   - id: dahlia-diadem
     name: Dahlia Diadem
+    color: "#EF6400"
     players:
       - name: Washidai
         tier: Masters
@@ -137,6 +139,7 @@ teams:
             channelId: UC61OwuYOVuKkpKnid-43Twg  # 白波らむね / Shiranami Ramune
   - id: camellia-crown
     name: Camellia Crown
+    color: "#D10015"
     players:
       - name: Yutapon
         tier: Masters
@@ -256,6 +259,7 @@ teams:
             channelId: UCV5ZZlLjk5MKGg3L0n0vbzw  # 鷹宮リオン / Rion Takamiya
   - id: iris-tiara
     name: Iris Tiara
+    color: "#0046DC"
     players:
       - name: らいじん
         tier: Masters
@@ -379,6 +383,7 @@ teams:
             channelId: UCAHQGIKolfBfoeXXMY79SBA  # 白那しずく
   - id: laurel-regalia
     name: Laurel Regalia
+    color: "#00A032"
     players:
       - name: apaMEN
         tier: Masters

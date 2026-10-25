@@ -69,6 +69,7 @@ export async function generateSiteData(
     teams: teams.teams.map((team) => ({
       id: team.id,
       name: team.name,
+      color: team.color,
       players: team.players.map((player) => ({
         name: player.name,
         tier: player.tier,

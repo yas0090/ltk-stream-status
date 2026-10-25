@@ -14,6 +14,7 @@ export const EMPTY_FILTER: Filter = { teams: [], tiers: [], liveOnly: false, ltk
 export type TeamView = {
   id: string;
   name: string;
+  color: string;
   tiers: TierGroup<PlayerStatus>[];
 };
 
@@ -35,6 +36,7 @@ export function buildView(teams: readonly TeamStatus[], filter: Filter): TeamVie
     .map((team) => ({
       id: team.id,
       name: team.name,
+      color: team.color,
       tiers: groupByTier(team.players.filter((player) => matches(team, player, filter))),
     }))
     .filter((team) => team.tiers.length > 0);

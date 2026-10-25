@@ -23,6 +23,8 @@ const playerSchema = z.strictObject({
 const teamSchema = z.strictObject({
   id: z.string().regex(/^[a-z0-9-]+$/, "チーム id は英小文字・数字・ハイフンだけで書いてください"),
   name: z.string().min(1),
+  // チームカラー（AC-28）
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "チームカラーは #RRGGBB 形式で書いてください"),
   players: z.array(playerSchema),
 });
 

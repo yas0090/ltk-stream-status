@@ -8,6 +8,7 @@ const teams: TeamStatus[] = [
   {
     id: "a",
     name: "チームA",
+    color: "#EF6400",
     players: [
       {
         name: "配信中の人",
@@ -45,6 +46,7 @@ const teams: TeamStatus[] = [
   {
     id: "b",
     name: "チームB",
+    color: "#D10015",
     players: [
       {
         name: "B の人",
@@ -152,6 +154,30 @@ describe("renderTeams", () => {
     const parent = img.parentElement!;
     img.dispatchEvent(new Event("error"));
     expect(parent.querySelector(".avatar--fallback")?.textContent).toBe("取");
+  });
+
+  it("チームのカードにチームカラーを渡す（AC-28）", () => {
+    const team = render().querySelector<HTMLElement>('[data-team="a"]')!;
+    expect(team.style.getPropertyValue("--team-color")).toBe("#EF6400");
+  });
+
+  it("配信中の選手カードにだけ LIVE バッジを付ける（AC-5）", () => {
+    const root = render();
+    expect(card(root, "配信中の人").querySelector(".live-badge")?.textContent).toBe("LIVE");
+    expect(card(root, "配信していない人").querySelector(".live-badge")).toBeNull();
+  });
+
+  it("ロールの列見出しと選手カードにロールアイコンを付ける（AC-29）", () => {
+    const root = render();
+    const header = root.querySelector('[data-team="a"] .role-header')!;
+    expect([...header.querySelectorAll(".role-icon")].map((el) => el.className)).toEqual([
+      "role-icon role-icon--top",
+      "role-icon role-icon--jg",
+      "role-icon role-icon--mid",
+      "role-icon role-icon--adc",
+      "role-icon role-icon--sup",
+    ]);
+    expect(card(root, "配信中の人").querySelector(".role .role-icon--mid")).not.toBeNull();
   });
 
   it("該当者がいなければメッセージを出す", () => {
