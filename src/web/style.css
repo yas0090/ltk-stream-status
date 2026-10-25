@@ -1,0 +1,292 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --text: #1c2024;
+  --text-muted: #60646c;
+  --border: #e0e1e6;
+  --live: #e5484d;
+  --offline: #b9bbc6;
+  --ltk-bg: #1f6feb;
+  --ltk-text: #ffffff;
+  --twitch: #9146ff;
+  --youtube: #ff0033;
+  --warning-bg: #fff4d6;
+  --warning-text: #7a4b00;
+  --error: #ce2c31;
+  --chip-checked-bg: #1c2024;
+  --chip-checked-text: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111113;
+    --surface: #1b1b1f;
+    --text: #edeef0;
+    --text-muted: #a0a3ab;
+    --border: #2e3035;
+    --live: #ff6369;
+    --offline: #5a5c63;
+    --ltk-bg: #4493f8;
+    --ltk-text: #0b0d10;
+    --twitch: #a970ff;
+    --youtube: #ff4e5f;
+    --warning-bg: #3a2a00;
+    --warning-text: #ffd27a;
+    --error: #ff6369;
+    --chip-checked-bg: #edeef0;
+    --chip-checked-text: #111113;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  line-height: 1.5;
+}
+
+#app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: inherit;
+}
+
+/* ヘッダー */
+.site-header h1 {
+  margin: 0;
+  font-size: 1.375rem;
+}
+
+.updated-at {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.stale-warning,
+.load-error {
+  margin: 12px 0 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  font-size: 0.875rem;
+}
+
+/* 絞り込み */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: flex-end;
+  margin: 16px 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.filters fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.filters legend {
+  width: 100%;
+  margin-bottom: 4px;
+  padding: 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.chip {
+  position: relative;
+  cursor: pointer;
+}
+
+.chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chip span {
+  display: inline-block;
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.875rem;
+}
+
+.chip input:checked + span {
+  border-color: var(--chip-checked-bg);
+  background: var(--chip-checked-bg);
+  color: var(--chip-checked-text);
+}
+
+.chip input:focus-visible + span {
+  outline: 2px solid var(--ltk-bg);
+  outline-offset: 2px;
+}
+
+.reset {
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+/* 一覧 */
+.team {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.team-name {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.tier-name {
+  margin: 12px 0 4px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.player {
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+
+.player-head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* 赤 = 配信中 / 灰 = 配信していない（AC-5） */
+.live-mark {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--offline);
+}
+
+.player[data-live="true"] .live-mark {
+  background: var(--live);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--live) 25%, transparent);
+}
+
+.role {
+  flex: none;
+  width: 2.5em;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.player-name {
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.channels {
+  margin: 2px 0 0 calc(10px + 8px);
+}
+
+.channel {
+  padding: 2px 0;
+  font-size: 0.875rem;
+}
+
+.channel-head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.channel-link {
+  padding-left: 6px;
+  border-left: 3px solid var(--border);
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.channel-link:hover {
+  text-decoration: underline;
+}
+
+.channel--twitch .channel-link {
+  border-left-color: var(--twitch);
+}
+
+.channel--youtube .channel-link {
+  border-left-color: var(--youtube);
+}
+
+.fetch-error {
+  color: var(--error);
+  font-size: 0.75rem;
+}
+
+.stream {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  margin: 2px 0 0 9px;
+}
+
+.stream-link {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ltk-tag {
+  flex: none;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--ltk-bg);
+  color: var(--ltk-text);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.empty {
+  color: var(--text-muted);
+  text-align: center;
+}
