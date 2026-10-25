@@ -19,7 +19,7 @@ export const fetchSiteData = async (): Promise<SiteData> => {
   return (await res.json()) as SiteData;
 };
 
-// 非公式であることとデータの出典、Riot Games の免責表示（AC-30）
+// 非公式であることと、Riot Games の免責表示（AC-30）
 const renderFooter = () =>
   h(
     "footer",
@@ -27,7 +27,7 @@ const renderFooter = () =>
     h(
       "p",
       {},
-      "このサイトは非公式のファンサイトで、League The k4sen（LTK）の運営とは関係ありません。出場者は LTK 公式サイトと FISTBUMP の記事、チャンネルは FollowBoard をもとに登録し、配信状態は Twitch API と YouTube Data API から取得しています。",
+      "このサイトは非公式のファンサイトで、League The k4sen（LTK）の運営とは関係ありません。配信状態は Twitch API と YouTube Data API から取得しています。",
     ),
     h(
       "p",
