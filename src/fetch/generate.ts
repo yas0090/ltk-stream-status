@@ -8,6 +8,19 @@ import { youtubeChannelUrl } from "./youtube";
 export type Fetchers = {
   twitch: (logins: string[]) => Promise<Map<string, ChannelResult>>;
   youtube: (channelIds: string[]) => Promise<Map<string, ChannelResult>>;
+  // アイコン画像（AC-27）。失敗しても配信状態には影響させない
+  twitchAvatars?: (logins: string[]) => Promise<Map<string, string>>;
+  youtubeAvatars?: (channelIds: string[]) => Promise<Map<string, string>>;
+};
+
+const fetchAvatars = async (fetcher: ((ids: string[]) => Promise<Map<string, string>>) | undefined, ids: string[]) => {
+  if (!fetcher || ids.length === 0) return new Map<string, string>();
+  try {
+    return await fetcher(ids);
+  } catch (error) {
+    console.warn(String(error));
+    return new Map<string, string>();
+  }
 };
 
 const allChannels = (teams: TeamsFile) => teams.teams.flatMap((t) => t.players.flatMap((p) => p.channels));
@@ -22,10 +35,20 @@ export async function generateSiteData(
   const twitchLogins = channels.flatMap((c) => (c.platform === "twitch" ? [c.login] : []));
   const youtubeIds = channels.flatMap((c) => (c.platform === "youtube" ? [c.channelId] : []));
 
-  const [twitch, youtube] = await Promise.all([
+  const [twitch, youtube, twitchAvatars, youtubeAvatars] = await Promise.all([
     twitchLogins.length > 0 ? fetchers.twitch(twitchLogins) : new Map<string, ChannelResult>(),
     youtubeIds.length > 0 ? fetchers.youtube(youtubeIds) : new Map<string, ChannelResult>(),
+    fetchAvatars(fetchers.twitchAvatars, twitchLogins),
+    fetchAvatars(fetchers.youtubeAvatars, youtubeIds),
   ]);
+
+  // データファイルに書いた順で、最初に取得できたアイコン画像を使う
+  const avatarOf = (channels: readonly ChannelInput[]) =>
+    channels
+      .map((c) => (c.platform === "twitch" ? twitchAvatars.get(c.login.toLowerCase()) : youtubeAvatars.get(c.channelId)))
+      .find((url) => url !== undefined);
+
+  const withAvatar = (avatarUrl: string | undefined) => (avatarUrl ? { avatarUrl } : {});
 
   const toStatus = (channel: ChannelInput): ChannelStatus => {
     const [channelUrl, result] =
@@ -50,6 +73,7 @@ export async function generateSiteData(
         name: player.name,
         tier: player.tier,
         role: player.role,
+        ...withAvatar(avatarOf(player.channels)),
         channels: player.channels.map(toStatus),
       })),
     })),

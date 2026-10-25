@@ -3,6 +3,10 @@ import { chunk, FAILED, OFFLINE, type ChannelResult, type FetchFn } from "./type
 export type TwitchCredentials = { clientId: string; clientSecret: string };
 
 type StreamsResponse = { data: { user_login: string; title: string; type: string }[] };
+type UsersResponse = { data: { login: string; profile_image_url: string }[] };
+
+// 1 回の実行の中で、配信状態とアイコン画像の取得に同じトークンを使い回す
+export type TwitchTokenProvider = () => Promise<string>;
 
 const BATCH_SIZE = 100;
 
@@ -17,6 +21,11 @@ async function getAppToken({ clientId, clientSecret }: TwitchCredentials, fetchF
   if (!res.ok) throw new Error(`Twitch のトークン取得に失敗しました (HTTP ${res.status})`);
   const body = (await res.json()) as { access_token: string };
   return body.access_token;
+}
+
+export function createTwitchTokenProvider(credentials: TwitchCredentials, fetchFn: FetchFn = fetch): TwitchTokenProvider {
+  let token: Promise<string> | undefined;
+  return () => (token ??= getAppToken(credentials, fetchFn));
 }
 
 async function fetchBatch(logins: string[], clientId: string, token: string, fetchFn: FetchFn) {
@@ -35,6 +44,7 @@ export async function fetchTwitchStatuses(
   logins: readonly string[],
   credentials: TwitchCredentials,
   fetchFn: FetchFn = fetch,
+  getToken: TwitchTokenProvider = createTwitchTokenProvider(credentials, fetchFn),
 ): Promise<Map<string, ChannelResult>> {
   const normalized = [...new Set(logins.map((login) => login.toLowerCase()))];
   const results = new Map<string, ChannelResult>();
@@ -42,7 +52,7 @@ export async function fetchTwitchStatuses(
 
   let token: string;
   try {
-    token = await getAppToken(credentials, fetchFn);
+    token = await getToken();
   } catch (error) {
     console.warn(String(error));
     for (const login of normalized) results.set(login, FAILED);
@@ -64,4 +74,32 @@ export async function fetchTwitchStatuses(
     }
   }
   return results;
+}
+
+// キーは小文字のログイン名。取得できなかったログイン名は含めない（AC-27）
+export async function fetchTwitchAvatars(
+  logins: readonly string[],
+  credentials: TwitchCredentials,
+  fetchFn: FetchFn = fetch,
+  getToken: TwitchTokenProvider = createTwitchTokenProvider(credentials, fetchFn),
+): Promise<Map<string, string>> {
+  const normalized = [...new Set(logins.map((login) => login.toLowerCase()))];
+  const avatars = new Map<string, string>();
+  if (normalized.length === 0) return avatars;
+
+  try {
+    const token = await getToken();
+    for (const batch of chunk(normalized, BATCH_SIZE)) {
+      const url = new URL("https://api.twitch.tv/helix/users");
+      for (const login of batch) url.searchParams.append("login", login);
+      const res = await fetchFn(url, { headers: { "Client-Id": credentials.clientId, Authorization: `Bearer ${token}` } });
+      if (!res.ok) throw new Error(`Twitch のアイコン画像の取得に失敗しました (HTTP ${res.status})`);
+      for (const user of ((await res.json()) as UsersResponse).data) {
+        if (user.profile_image_url) avatars.set(user.login.toLowerCase(), user.profile_image_url);
+      }
+    }
+  } catch (error) {
+    console.warn(String(error));
+  }
+  return avatars;
 }

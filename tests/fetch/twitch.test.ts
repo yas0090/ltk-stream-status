@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { fetchTwitchStatuses } from "../../src/fetch/twitch";
+import { createTwitchTokenProvider, fetchTwitchAvatars, fetchTwitchStatuses } from "../../src/fetch/twitch";
 import type { FetchFn } from "../../src/fetch/types";
 
 const credentials = { clientId: "cid", clientSecret: "secret" };
@@ -90,3 +90,35 @@ describe("fetchTwitchStatuses", () => {
     expect(fetchFn).not.toHaveBeenCalled();
   });
 });
+
+describe("fetchTwitchAvatars（AC-27）", () => {
+  const usersFetch = (handler: (logins: string[]) => Response) =>
+    vi.fn<FetchFn>(async (input) => {
+      const url = new URL(String(input));
+      if (url.hostname === "id.twitch.tv") return json({ access_token: "token" });
+      return handler(url.searchParams.getAll("login"));
+    });
+
+  it("ログイン名ごとのアイコン画像を返す", async () => {
+    const fetchFn = usersFetch((logins) =>
+      json({ data: logins.filter((l) => l !== "ghost").map((l) => ({ login: l, profile_image_url: `https://img/${l}.png` })) }),
+    );
+    const avatars = await fetchTwitchAvatars(["Alice", "ghost"], credentials, fetchFn);
+    expect(Object.fromEntries(avatars)).toEqual({ alice: "https://img/alice.png" });
+  });
+
+  it("失敗しても例外を投げずに空を返す", async () => {
+    const fetchFn = usersFetch(() => json({}, 500));
+    expect((await fetchTwitchAvatars(["alice"], credentials, fetchFn)).size).toBe(0);
+  });
+
+  it("トークンを配信状態の取得と使い回せる", async () => {
+    const fetchFn = mockFetch(() => json({ data: [] }));
+    const getToken = createTwitchTokenProvider(credentials, fetchFn);
+    await fetchTwitchStatuses(["alice"], credentials, fetchFn, getToken);
+    await fetchTwitchAvatars(["alice"], credentials, fetchFn, getToken);
+    const tokenCalls = fetchFn.mock.calls.filter(([input]) => new URL(String(input)).hostname === "id.twitch.tv");
+    expect(tokenCalls).toHaveLength(1);
+  });
+});
+

@@ -102,6 +102,44 @@ describe("generateSiteData", () => {
     expect(data.teams[0]?.players[0]?.channels.map((c) => c.state)).toEqual(["error", "error"]);
   });
 
+  it("アイコン画像はデータの順で最初に取得できたものを使う（AC-27）", async () => {
+    const base = fetchers({ state: "offline", streams: [] }, { state: "offline", streams: [] });
+    const avatarOf = async (twitch: Record<string, string>, youtube: Record<string, string>) =>
+      (
+        await generateSiteData(
+          teamsData(),
+          parseKeywordsData({ ltkKeywords: ["LTK"] }),
+          {
+            ...base,
+            twitchAvatars: async () => new Map(Object.entries(twitch)),
+            youtubeAvatars: async () => new Map(Object.entries(youtube)),
+          },
+          NOW,
+        )
+      ).teams[0]?.players[0]?.avatarUrl;
+
+    expect(await avatarOf({ alice: "tw.png" }, { [YT]: "yt.png" })).toBe("tw.png");
+    expect(await avatarOf({}, { [YT]: "yt.png" })).toBe("yt.png");
+    expect(await avatarOf({}, {})).toBeUndefined();
+  });
+
+  it("アイコン画像の取得が失敗しても配信状態は出力される", async () => {
+    const data = await generateSiteData(
+      teamsData(),
+      parseKeywordsData({ ltkKeywords: ["LTK"] }),
+      {
+        ...fetchers(live("t", "u"), { state: "offline", streams: [] }),
+        twitchAvatars: async () => {
+          throw new Error("boom");
+        },
+      },
+      NOW,
+    );
+    const player = data.teams[0]?.players[0];
+    expect(player?.avatarUrl).toBeUndefined();
+    expect(player?.channels[0]?.state).toBe("live");
+  });
+
   it("使うプラットフォームの秘密情報だけを要求する", () => {
     expect(requiredSecrets(teamsData())).toEqual(["TWITCH_CLIENT_ID", "TWITCH_CLIENT_SECRET", "YOUTUBE_API_KEY"]);
     expect(requiredSecrets(parseTeamsData({ teams: [] }))).toEqual([]);

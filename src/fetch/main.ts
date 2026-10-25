@@ -5,8 +5,8 @@ import { parseArgs } from "node:util";
 import { parse as parseYaml } from "yaml";
 import { parseKeywordsData, parseTeamsData } from "../shared/schema";
 import { generateSiteData, requiredSecrets } from "./generate";
-import { fetchTwitchStatuses } from "./twitch";
-import { fetchYouTubeStatuses } from "./youtube";
+import { createTwitchTokenProvider, fetchTwitchAvatars, fetchTwitchStatuses } from "./twitch";
+import { fetchYouTubeAvatars, fetchYouTubeStatuses } from "./youtube";
 
 // データファイルを検証し、配信状態を取得して site-data.json を書き出す。
 // 検証エラーや設定不足のときは終了コード 1 で終える（AC-23）
@@ -28,10 +28,13 @@ async function main() {
   if (missing.length > 0) throw new Error(`環境変数が設定されていません: ${missing.join(", ")}`);
 
   const env = process.env as Record<string, string>;
+  const twitchCredentials = { clientId: env.TWITCH_CLIENT_ID!, clientSecret: env.TWITCH_CLIENT_SECRET! };
+  const getTwitchToken = createTwitchTokenProvider(twitchCredentials);
   const siteData = await generateSiteData(teams, keywords, {
-    twitch: (logins) =>
-      fetchTwitchStatuses(logins, { clientId: env.TWITCH_CLIENT_ID!, clientSecret: env.TWITCH_CLIENT_SECRET! }),
+    twitch: (logins) => fetchTwitchStatuses(logins, twitchCredentials, fetch, getTwitchToken),
     youtube: (channelIds) => fetchYouTubeStatuses(channelIds, env.YOUTUBE_API_KEY!),
+    twitchAvatars: (logins) => fetchTwitchAvatars(logins, twitchCredentials, fetch, getTwitchToken),
+    youtubeAvatars: (channelIds) => fetchYouTubeAvatars(channelIds, env.YOUTUBE_API_KEY!),
   });
 
   await mkdir(dirname(values.out), { recursive: true });

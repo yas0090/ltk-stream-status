@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { fetchYouTubeStatuses, parseFeed } from "../../src/fetch/youtube";
+import { fetchYouTubeAvatars, fetchYouTubeStatuses, parseFeed } from "../../src/fetch/youtube";
 import type { FetchFn } from "../../src/fetch/types";
 
 const NOW = new Date("2026-10-25T12:00:00Z");
@@ -150,3 +150,28 @@ describe("fetchYouTubeStatuses", () => {
     expect(result.get(CH_A)?.state).toBe("error");
   });
 });
+
+describe("fetchYouTubeAvatars（AC-27）", () => {
+  it("チャンネル ID ごとのアイコン画像を返す（medium がなければ default）", async () => {
+    const fetchFn = vi.fn<FetchFn>(async () =>
+      json({
+        items: [
+          { id: CH_A, snippet: { thumbnails: { default: { url: "a-default" }, medium: { url: "a-medium" } } } },
+          { id: CH_B, snippet: { thumbnails: { default: { url: "b-default" } } } },
+        ],
+      }),
+    );
+    const avatars = await fetchYouTubeAvatars([CH_A, CH_B], "key", fetchFn);
+    expect(Object.fromEntries(avatars)).toEqual({ [CH_A]: "a-medium", [CH_B]: "b-default" });
+
+    const url = new URL(String(fetchFn.mock.calls[0]![0]));
+    expect(url.pathname).toBe("/youtube/v3/channels");
+    expect(url.searchParams.get("id")).toBe(`${CH_A},${CH_B}`);
+  });
+
+  it("失敗しても例外を投げずに空を返す", async () => {
+    const fetchFn = vi.fn<FetchFn>(async () => json({}, 403));
+    expect((await fetchYouTubeAvatars([CH_A], "key", fetchFn)).size).toBe(0);
+  });
+});
+

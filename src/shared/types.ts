@@ -28,6 +28,8 @@ export type PlayerStatus = {
   name: string;
   tier: Tier;
   role: Role;
+  // チャンネルのアイコン画像。取得できなければ省略（AC-27）
+  avatarUrl?: string;
   channels: ChannelStatus[];
 };
 

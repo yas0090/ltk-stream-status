@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from "vitest";
-import { buildView, EMPTY_FILTER } from "../../src/shared/filter";
+import { buildView, EMPTY_FILTER, type Filter } from "../../src/shared/filter";
 import type { TeamStatus } from "../../src/shared/types";
 import { renderStatusBar, renderTeams } from "../../src/web/render";
 
@@ -13,17 +13,18 @@ const teams: TeamStatus[] = [
         name: "配信中の人",
         tier: "Core",
         role: "MID",
+        avatarUrl: "https://img/live.png",
         channels: [
           {
             platform: "youtube",
             channelUrl: "https://www.youtube.com/channel/UCx",
             state: "live",
             streams: [
-              { title: "LTK スクリム", url: "https://www.youtube.com/watch?v=1", ltk: true },
-              { title: "<b>ソロ</b>", url: "https://www.youtube.com/watch?v=2", ltk: false },
+              { title: "<b>ソロ</b>", url: "https://www.youtube.com/watch?v=1", ltk: false },
+              { title: "LTK スクリム", url: "https://www.youtube.com/watch?v=2", ltk: true },
             ],
           },
-          { platform: "twitch", channelUrl: "https://www.twitch.tv/x", state: "error", streams: [] },
+          { platform: "twitch", channelUrl: "https://www.twitch.tv/x", state: "offline", streams: [] },
         ],
       },
       {
@@ -31,6 +32,13 @@ const teams: TeamStatus[] = [
         tier: "Next",
         role: "TOP",
         channels: [{ platform: "twitch", channelUrl: "https://www.twitch.tv/y", state: "offline", streams: [] }],
+      },
+      {
+        name: "取得失敗の人",
+        tier: "Next",
+        role: "SUP",
+        avatarUrl: "https://img/fail.png",
+        channels: [{ platform: "twitch", channelUrl: "https://www.twitch.tv/w", state: "error", streams: [] }],
       },
     ],
   },
@@ -41,70 +49,109 @@ const teams: TeamStatus[] = [
       {
         name: "B の人",
         tier: "Masters",
-        role: "SUP",
+        role: "JG",
         channels: [{ platform: "twitch", channelUrl: "https://www.twitch.tv/z", state: "offline", streams: [] }],
       },
     ],
   },
 ];
 
-const render = () => renderTeams(buildView(teams, EMPTY_FILTER));
-const playerEl = (root: HTMLElement, name: string) =>
-  [...root.querySelectorAll<HTMLElement>(".player")].find((el) => el.querySelector(".player-name")?.textContent === name)!;
+const render = (filter: Filter = EMPTY_FILTER) => renderTeams(buildView(teams, filter));
+const card = (root: HTMLElement, name: string) =>
+  [...root.querySelectorAll<HTMLElement>(".player-card")].find((el) => el.querySelector(".player-name")?.textContent === name)!;
+// 階級の行ごとに、マスの中身（選手名 or 空欄）をロール順に並べる
+const grid = (root: HTMLElement, teamId: string) =>
+  [...root.querySelectorAll(`[data-team="${teamId}"] .tier-row`)].map((row) => [
+    row.querySelector(".tier-name")?.textContent,
+    ...[...row.children].slice(1).map((cell) => cell.querySelector(".player-name")?.textContent ?? "-"),
+  ]);
 
 describe("renderTeams", () => {
   it("チームごとに分かれ、全員が表示される（AC-1）", () => {
     const root = render();
     expect([...root.querySelectorAll(".team-name")].map((el) => el.textContent)).toEqual(["チームA", "チームB"]);
-    expect(root.querySelectorAll(".player")).toHaveLength(3);
+    expect(root.querySelectorAll(".player-card")).toHaveLength(4);
   });
 
-  it("チーム内は階級ごとに分かれ、Next → Core の順に並ぶ", () => {
-    const team = render().querySelector('[data-team="a"]')!;
-    expect([...team.querySelectorAll(".tier-name")].map((el) => el.textContent)).toEqual(["Next", "Core"]);
+  it("階級（行）× ロール（列）の格子に並び、いないマスは空欄になる（AC-3, AC-4）", () => {
+    expect(grid(render(), "a")).toEqual([
+      ["Next", "配信していない人", "-", "-", "-", "取得失敗の人"],
+      ["Core", "-", "-", "配信中の人", "-", "-"],
+    ]);
+    const header = render().querySelector('[data-team="a"] .role-header');
+    expect([...header!.children].map((el) => el.textContent)).toEqual(["", "TOP", "JG", "MID", "ADC", "SUP"]);
   });
 
-  it("配信中かどうかで配信中マークが変わる（AC-5）", () => {
+  it("絞り込みで外れた選手は空欄になり、空の階級とチームは表示しない（AC-18）", () => {
+    const root = render({ ...EMPTY_FILTER, liveOnly: true });
+    expect(root.querySelectorAll(".team")).toHaveLength(1);
+    expect(grid(root, "a")).toEqual([["Core", "-", "-", "配信中の人", "-", "-"]]);
+  });
+
+  it("配信中かどうかで配信中マークと data-live が変わる（AC-5）", () => {
     const root = render();
-    expect(playerEl(root, "配信中の人").dataset.live).toBe("true");
-    expect(playerEl(root, "配信中の人").querySelector(".live-mark")?.getAttribute("aria-label")).toBe("配信中");
-    expect(playerEl(root, "配信していない人").dataset.live).toBe("false");
+    expect(card(root, "配信中の人").dataset.live).toBe("true");
+    expect(card(root, "配信中の人").querySelector(".live-mark")?.getAttribute("aria-label")).toBe("配信中");
+    expect(card(root, "配信していない人").dataset.live).toBe("false");
   });
 
-  it("すべてのチャンネルにプラットフォーム名とチャンネルリンクがある（AC-6）", () => {
-    const links = [...render().querySelectorAll<HTMLAnchorElement>(".channel-link")];
-    // 階級順（Next → Core）に並ぶので、チームAは配信していない人が先
-    expect(links.map((a) => [a.textContent, a.getAttribute("href")])).toEqual([
-      ["Twitch", "https://www.twitch.tv/y"],
-      ["YouTube", "https://www.youtube.com/channel/UCx"],
-      ["Twitch", "https://www.twitch.tv/x"],
-      ["Twitch", "https://www.twitch.tv/z"],
-    ]);
-    expect(links.every((a) => a.target === "_blank" && a.rel === "noopener noreferrer")).toBe(true);
+  it("どの選手カードも同じ3行構成になる", () => {
+    for (const el of render().querySelectorAll(".player-card")) {
+      expect([...el.children].map((c) => c.className)).toEqual(["card-head", "platforms", "stream-line"]);
+    }
   });
 
-  it("配信中のチャンネルには、タイトルと配信リンクがすべて表示される（AC-7, AC-8）", () => {
-    const streams = [...playerEl(render(), "配信中の人").querySelectorAll<HTMLAnchorElement>(".stream-link")];
-    expect(streams.map((a) => [a.textContent, a.getAttribute("href")])).toEqual([
-      ["LTK スクリム", "https://www.youtube.com/watch?v=1"],
-      ["<b>ソロ</b>", "https://www.youtube.com/watch?v=2"],
+  it("チャンネルごとにプラットフォームアイコンがあり、配信中は配信ページ、それ以外はチャンネルページへリンクする（AC-6, AC-7）", () => {
+    const links = [...card(render(), "配信中の人").querySelectorAll<HTMLAnchorElement>(".platform-link")];
+    expect(links.map((a) => [a.getAttribute("aria-label"), a.getAttribute("href")])).toEqual([
+      ["YouTube（配信中）", "https://www.youtube.com/watch?v=1"],
+      ["Twitch（配信していない）", "https://www.twitch.tv/x"],
     ]);
+    expect(links.every((a) => a.querySelector("svg") && a.target === "_blank" && a.rel === "noopener noreferrer")).toBe(true);
+  });
+
+  it("配信タイトルは最初の1件と残りの件数を表示し、全タイトルをツールチップに入れる（AC-7, AC-8）", () => {
+    const line = card(render(), "配信中の人").querySelector(".stream-line")!;
+    const link = line.querySelector<HTMLAnchorElement>(".stream-link")!;
+    expect(link.textContent).toBe("<b>ソロ</b>");
+    expect(link.getAttribute("href")).toBe("https://www.youtube.com/watch?v=1");
+    expect(link.title).toBe("<b>ソロ</b>\nLTK スクリム");
+    expect(line.querySelector(".more-streams")?.textContent).toBe("+1");
   });
 
   it("配信タイトルは HTML として解釈しない", () => {
     expect(render().querySelector("b")).toBeNull();
   });
 
-  it("LTK タグは LTK 判定された配信にだけ付く", () => {
-    const streams = [...playerEl(render(), "配信中の人").querySelectorAll(".stream")];
-    expect(streams.map((s) => s.querySelector(".ltk-tag")?.textContent ?? null)).toEqual(["LTK", null]);
+  it("LTK 判定された配信があれば LTK タグを付ける", () => {
+    const root = render();
+    expect(card(root, "配信中の人").querySelector(".ltk-tag")?.textContent).toBe("LTK");
+    expect(card(root, "配信していない人").querySelector(".ltk-tag")).toBeNull();
   });
 
-  it("取得に失敗したチャンネルには「取得失敗」と表示する（AC-22）", () => {
-    const errors = [...render().querySelectorAll(".fetch-error")];
-    expect(errors).toHaveLength(1);
-    expect(errors[0]?.textContent).toBe("取得失敗");
-    expect(errors[0]?.closest(".channel")?.getAttribute("data-state")).toBe("error");
+  it("配信していない選手のタイトル行は空になる", () => {
+    expect(card(render(), "配信していない人").querySelector(".stream-line")?.textContent).toBe("");
+  });
+
+  it("取得に失敗したチャンネルがあれば「取得失敗」と表示する（AC-22）", () => {
+    const el = card(render(), "取得失敗の人");
+    expect(el.querySelector(".fetch-error")?.textContent).toBe("取得失敗");
+    expect(el.querySelector(".platform-link")?.getAttribute("data-state")).toBe("error");
+  });
+
+  it("アイコン画像があれば表示し、なければ頭文字を表示する（AC-27）", () => {
+    const root = render();
+    expect(card(root, "配信中の人").querySelector<HTMLImageElement>("img.avatar")?.getAttribute("src")).toBe(
+      "https://img/live.png",
+    );
+    expect(card(root, "配信していない人").querySelector(".avatar--fallback")?.textContent).toBe("配");
+  });
+
+  it("アイコン画像を読み込めなければ頭文字に切り替える（AC-27）", () => {
+    const img = card(render(), "取得失敗の人").querySelector<HTMLImageElement>("img.avatar")!;
+    const parent = img.parentElement!;
+    img.dispatchEvent(new Event("error"));
+    expect(parent.querySelector(".avatar--fallback")?.textContent).toBe("取");
   });
 
   it("該当者がいなければメッセージを出す", () => {

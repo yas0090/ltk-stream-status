@@ -54,7 +54,7 @@ body {
 }
 
 #app {
-  max-width: 720px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 16px;
 }
@@ -163,130 +163,250 @@ a {
   cursor: pointer;
 }
 
-/* 一覧 */
+/* 一覧: チームのカードを縦に並べる */
+.teams {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .team {
-  margin-bottom: 16px;
-  padding: 12px 16px;
+  padding: 12px 16px 16px;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--surface);
 }
 
 .team-name {
-  margin: 0;
+  margin: 0 0 8px;
   font-size: 1.125rem;
 }
 
+/* PC: ロール（列）× 階級（行）の格子（AC-3, AC-4） */
+.team-grid {
+  display: grid;
+  grid-template-columns: 4.5rem repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.role-header,
+.tier-row {
+  display: contents;
+}
+
+.role-header span {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+}
+
 .tier-name {
-  margin: 12px 0 4px;
+  align-self: center;
+  margin: 0;
   color: var(--text-muted);
   font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.04em;
 }
 
-.player {
-  padding: 8px 0;
-  border-top: 1px solid var(--border);
+/* 選手カード: 配信の有無にかかわらず同じ高さ（3行固定） */
+.player-card,
+.slot-empty {
+  height: 100px;
+  border-radius: 10px;
 }
 
-.player-head {
+.player-card {
+  display: grid;
+  grid-template-rows: 32px 20px 18px;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.player-card[data-live="true"] {
+  border-color: color-mix(in srgb, var(--live) 45%, var(--border));
+  background: color-mix(in srgb, var(--live) 7%, var(--surface));
+}
+
+.slot-empty {
+  border: 1px dashed var(--border);
+}
+
+.card-head {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
+  min-width: 0;
+}
+
+.avatar {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--offline);
+  border-radius: 50%;
+  background: var(--bg);
+  object-fit: cover;
+}
+
+.player-card[data-live="true"] .avatar {
+  border-color: var(--live);
+}
+
+.avatar--fallback {
+  display: inline-grid;
+  place-items: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 700;
 }
 
 /* 赤 = 配信中 / 灰 = 配信していない（AC-5） */
 .live-mark {
   flex: none;
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: var(--offline);
 }
 
-.player[data-live="true"] .live-mark {
+.player-card[data-live="true"] .live-mark {
   background: var(--live);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--live) 25%, transparent);
-}
-
-.role {
-  flex: none;
-  width: 2.5em;
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  font-weight: 600;
 }
 
 .player-name {
+  flex: 1;
   min-width: 0;
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
-.channels {
-  margin: 2px 0 0 calc(10px + 8px);
-}
-
-.channel {
-  padding: 2px 0;
+  overflow: hidden;
   font-size: 0.875rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.channel-head {
+.role {
+  display: none;
+  flex: none;
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.platforms {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
 }
 
-.channel-link {
-  padding-left: 6px;
-  border-left: 3px solid var(--border);
-  color: var(--text-muted);
-  text-decoration: none;
+.platform-link {
+  position: relative;
+  display: inline-flex;
+  color: var(--offline);
 }
 
-.channel-link:hover {
-  text-decoration: underline;
+.platform-icon {
+  width: 20px;
+  height: 20px;
 }
 
-.channel--twitch .channel-link {
-  border-left-color: var(--twitch);
+.platform-link--twitch[data-state="live"] {
+  color: var(--twitch);
 }
 
-.channel--youtube .channel-link {
-  border-left-color: var(--youtube);
+.platform-link--youtube[data-state="live"] {
+  color: var(--youtube);
 }
 
-.fetch-error {
-  color: var(--error);
-  font-size: 0.75rem;
+/* 取得失敗のチャンネルには警告マーク（AC-22） */
+.platform-link[data-state="error"]::after {
+  content: "!";
+  position: absolute;
+  top: -4px;
+  right: -5px;
+  display: grid;
+  place-items: center;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--error);
+  color: var(--surface);
+  font-size: 0.5625rem;
+  font-weight: 700;
 }
 
-.stream {
+.stream-line {
   display: flex;
-  gap: 6px;
-  align-items: baseline;
-  margin: 2px 0 0 9px;
+  gap: 4px;
+  align-items: center;
+  min-width: 0;
+  font-size: 0.75rem;
+  line-height: 18px;
 }
 
 .stream-link {
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.more-streams {
+  flex: none;
+  color: var(--text-muted);
 }
 
 .ltk-tag {
   flex: none;
-  padding: 0 6px;
+  padding: 0 5px;
   border-radius: 4px;
   background: var(--ltk-bg);
   color: var(--ltk-text);
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   font-weight: 700;
-  line-height: 1.6;
+  line-height: 16px;
+}
+
+.fetch-error {
+  color: var(--error);
 }
 
 .empty {
   color: var(--text-muted);
   text-align: center;
+}
+
+/* スマートフォン: 階級ごとに選手カードを2列で折り返す */
+@media (max-width: 719px) {
+  .team {
+    padding: 12px;
+  }
+
+  .team-grid {
+    display: block;
+  }
+
+  .role-header,
+  .slot-empty {
+    display: none;
+  }
+
+  .tier-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .tier-name {
+    grid-column: 1 / -1;
+  }
+
+  .role {
+    display: inline;
+  }
 }

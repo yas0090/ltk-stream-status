@@ -111,3 +111,34 @@ export async function fetchYouTubeStatuses(
   }
   return results;
 }
+
+type ChannelsResponse = {
+  items?: { id: string; snippet: { thumbnails: Record<string, { url: string } | undefined> } }[];
+};
+
+// キーはチャンネル ID。取得できなかったチャンネルは含めない（AC-27）。1 回 1 ユニット
+export async function fetchYouTubeAvatars(
+  channelIds: readonly string[],
+  apiKey: string,
+  fetchFn: FetchFn = fetch,
+): Promise<Map<string, string>> {
+  const avatars = new Map<string, string>();
+  for (const batch of chunk([...new Set(channelIds)], BATCH_SIZE)) {
+    try {
+      const url = new URL("https://www.googleapis.com/youtube/v3/channels");
+      url.searchParams.set("part", "snippet");
+      url.searchParams.set("id", batch.join(","));
+      url.searchParams.set("maxResults", String(BATCH_SIZE));
+      url.searchParams.set("key", apiKey);
+      const res = await fetchFn(url);
+      if (!res.ok) throw new Error(`YouTube のアイコン画像の取得に失敗しました (HTTP ${res.status})`);
+      for (const item of ((await res.json()) as ChannelsResponse).items ?? []) {
+        const thumbnail = item.snippet.thumbnails.medium ?? item.snippet.thumbnails.default;
+        if (thumbnail?.url) avatars.set(item.id, thumbnail.url);
+      }
+    } catch (error) {
+      console.warn(String(error));
+    }
+  }
+  return avatars;
+}
