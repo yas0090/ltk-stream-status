@@ -1,5 +1,5 @@
 // 配列の順番がそのまま表示順になる（AC-3, AC-4）
-export const TIERS = ["Next", "Core", "Masters"] as const;
+export const TIERS = ["Masters", "Core", "Next"] as const;
 export const ROLES = ["TOP", "JG", "MID", "ADC", "SUP"] as const;
 export const PLATFORMS = ["twitch", "youtube"] as const;
 

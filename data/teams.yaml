@@ -1,6 +1,6 @@
 # 出場チームと出場者のデータ
 # - teams は書いた順がサイトでの表示順になる
-# - players は書く順は自由（サイトでは階級 Next → Core → Masters、ロール TOP → JG → MID → ADC → SUP の順に並ぶ）
+# - players は書く順は自由（サイトでは階級 Masters → Core → Next、ロール TOP → JG → MID → ADC → SUP の順に並ぶ）
 # - 1チームの中で、同じ階級・同じロールの出場者は1人だけ
 # - 誤りがあると更新処理がエラーで止まり、サイトは前回の状態のまま残る
 #

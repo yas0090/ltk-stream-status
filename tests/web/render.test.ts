@@ -77,8 +77,8 @@ describe("renderTeams", () => {
 
   it("階級（行）× ロール（列）の格子に並び、いないマスは空欄になる（AC-3, AC-4）", () => {
     expect(grid(render(), "a")).toEqual([
-      ["Next", "配信していない人", "-", "-", "-", "取得失敗の人"],
       ["Core", "-", "-", "配信中の人", "-", "-"],
+      ["Next", "配信していない人", "-", "-", "-", "取得失敗の人"],
     ]);
     const header = render().querySelector('[data-team="a"] .role-header');
     expect([...header!.children].map((el) => el.textContent)).toEqual(["", "TOP", "JG", "MID", "ADC", "SUP"]);

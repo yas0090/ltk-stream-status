@@ -7,8 +7,8 @@ const setup = () => {
   const onChange = vi.fn<(filter: Filter) => void>();
   const form = renderFilters(
     [
-      { id: "a", name: "チームA" },
-      { id: "b", name: "チームB" },
+      { id: "a", name: "チームA", color: "#EF6400" },
+      { id: "b", name: "チームB", color: "#D10015" },
     ],
     onChange,
   );
@@ -23,7 +23,14 @@ describe("renderFilters（AC-15〜19）", () => {
   it("チーム・階級・配信中のみ・LTK のみの選択肢がある", () => {
     const { form } = setup();
     const labels = [...form.querySelectorAll("label")].map((l) => l.textContent);
-    expect(labels).toEqual(["チームA", "チームB", "Next", "Core", "Masters", "配信中のみ", "LTK のみ"]);
+    expect(labels).toEqual(["チームA", "チームB", "Masters", "Core", "Next", "配信中のみ", "LTK のみ"]);
+  });
+
+  it("カテゴリごとに分かれ、チームのチップにはチームカラーが付く", () => {
+    const { form, input } = setup();
+    expect([...form.querySelectorAll(".filter-group legend")].map((l) => l.textContent)).toEqual(["チーム", "階級", "配信"]);
+    expect(input("team", "a").closest<HTMLElement>(".chip")?.style.getPropertyValue("--chip-color")).toBe("#EF6400");
+    expect(input("tier", "Core").closest(".chip")?.classList.contains("chip--colored")).toBe(false);
   });
 
   it("選んだ条件を Filter として通知する", () => {
@@ -35,7 +42,7 @@ describe("renderFilters（AC-15〜19）", () => {
     toggle("ltkOnly", "1");
     expect(onChange).toHaveBeenLastCalledWith({
       teams: ["b"],
-      tiers: ["Next", "Masters"],
+      tiers: ["Masters", "Next"],
       liveOnly: true,
       ltkOnly: true,
     });

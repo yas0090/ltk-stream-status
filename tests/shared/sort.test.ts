@@ -5,9 +5,9 @@ import type { Role, Tier } from "../../src/shared/types";
 const p = (tier: Tier, role: Role) => ({ name: `${tier}-${role}`, tier, role });
 
 describe("groupByTier（AC-3, AC-4）", () => {
-  it("階級を Next → Core → Masters の順に分ける", () => {
-    const groups = groupByTier([p("Masters", "TOP"), p("Next", "TOP"), p("Core", "TOP")]);
-    expect(groups.map((g) => g.tier)).toEqual(["Next", "Core", "Masters"]);
+  it("階級を Masters → Core → Next の順に分ける", () => {
+    const groups = groupByTier([p("Next", "TOP"), p("Masters", "TOP"), p("Core", "TOP")]);
+    expect(groups.map((g) => g.tier)).toEqual(["Masters", "Core", "Next"]);
   });
 
   it("階級内をロール順（TOP → JG → MID → ADC → SUP）に並べる", () => {
@@ -33,12 +33,12 @@ describe("groupByTier（AC-3, AC-4）", () => {
   });
 
   it("15人を正しく並べる", () => {
-    const tiers: Tier[] = ["Masters", "Core", "Next"];
+    const tiers: Tier[] = ["Next", "Core", "Masters"];
     const roles: Role[] = ["SUP", "ADC", "MID", "JG", "TOP"];
     const players = tiers.flatMap((t) => roles.map((r) => p(t, r)));
     const names = groupByTier(players).flatMap((g) => g.players.map((x) => x.name));
-    expect(names.slice(0, 5)).toEqual(["Next-TOP", "Next-JG", "Next-MID", "Next-ADC", "Next-SUP"]);
-    expect(names.at(-1)).toBe("Masters-SUP");
+    expect(names.slice(0, 5)).toEqual(["Masters-TOP", "Masters-JG", "Masters-MID", "Masters-ADC", "Masters-SUP"]);
+    expect(names.at(-1)).toBe("Next-SUP");
     expect(names).toHaveLength(15);
   });
 });

@@ -91,35 +91,56 @@ a {
   font-size: 0.875rem;
 }
 
-/* 絞り込み */
+/* 絞り込み: カテゴリごとに1行にし、区切り線で分ける */
 .filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 16px;
-  align-items: flex-end;
   margin: 16px 0;
-  padding: 12px;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--surface);
 }
 
-.filters fieldset {
+.filters-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.filters-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.filter-group {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+  margin: 0;
+  padding: 8px 12px;
+  border: 0;
+}
+
+.filter-group + .filter-group {
+  border-top: 1px solid var(--border);
+}
+
+/* legend を通常の要素として grid に並べるため float にする */
+.filter-group legend {
+  float: left;
+  padding: 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.chips {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   min-width: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-.filters legend {
-  width: 100%;
-  margin-bottom: 4px;
-  padding: 0;
-  color: var(--text-muted);
-  font-size: 0.75rem;
 }
 
 .chip {
@@ -145,6 +166,27 @@ a {
   border-color: var(--chip-checked-bg);
   background: var(--chip-checked-bg);
   color: var(--chip-checked-text);
+}
+
+.chip--colored span::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--chip-color);
+  vertical-align: 1px;
+}
+
+.chip--colored input:checked + span {
+  border-color: var(--chip-color);
+  background: var(--chip-color);
+  color: #ffffff;
+}
+
+.chip--colored input:checked + span::before {
+  background: #ffffff;
 }
 
 .chip input:focus-visible + span {
@@ -236,12 +278,12 @@ a {
   min-width: 0;
   padding: 8px 10px;
   border: 1px solid var(--team-border);
-  background: var(--surface);
+  background: color-mix(in srgb, var(--team-color) 9%, var(--surface));
 }
 
 .player-card[data-live="true"] {
   border-color: var(--live);
-  background: color-mix(in srgb, var(--live) 7%, var(--surface));
+  box-shadow: 0 0 0 1px var(--live);
 }
 
 .slot-empty {
