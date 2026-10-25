@@ -1,0 +1,35 @@
+# 出場チームと出場者のデータ
+# - teams は書いた順がサイトでの表示順になる
+# - players は書く順は自由（サイトでは階級 Next → Core → Masters、ロール TOP → JG → MID → ADC → SUP の順に並ぶ）
+# - 1チームの中で、同じ階級・同じロールの出場者は1人だけ
+# - 誤りがあると更新処理がエラーで止まり、サイトは前回の状態のまま残る
+#
+# 項目
+#   id       チームの識別子。英小文字・数字・ハイフンだけ
+#   name     チーム名
+#   tier     Next / Core / Masters
+#   role     TOP / JG / MID / ADC / SUP
+#   channels 1つ以上
+#     Twitch:  platform: twitch  と  login: ログイン名（https://www.twitch.tv/◯◯ の ◯◯）
+#     YouTube: platform: youtube と  channelId: UC で始まる24文字のチャンネル ID
+#              （チャンネルページの「概要」→「チャンネルを共有」→「チャンネル ID をコピー」で確認できる）
+#
+# 以下はサンプル。実際の出場者データに置き換える
+teams:
+  - id: sample-team
+    name: サンプルチーム
+    players:
+      - name: サンプル選手1
+        tier: Next
+        role: TOP
+        channels:
+          - platform: twitch
+            login: sample_player_1
+      - name: サンプル選手2
+        tier: Core
+        role: MID
+        channels:
+          - platform: twitch
+            login: sample_player_2
+          - platform: youtube
+            channelId: UCxxxxxxxxxxxxxxxxxxxxxx

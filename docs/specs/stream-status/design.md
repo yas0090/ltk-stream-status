@@ -217,8 +217,9 @@ tests/
   - `schedule: */5 * * * *`（AC-21）
   - `push`（main ブランチ）
   - `workflow_dispatch`
-- **手順**: checkout → 依存のインストール → テスト → データ検証と取得（site-data.json 生成）→ Vite でビルド → `actions/upload-pages-artifact` → `actions/deploy-pages`
-- **同時実行**: `concurrency: pages` を指定し、実行が重なったら古いほうを取り消す
+- **手順**: checkout → 依存のインストール → テスト → データ検証と取得（site-data.json 生成）→ Vite でビルド → 秘密情報の混入チェック → `actions/upload-pages-artifact` → `actions/deploy-pages`
+  - テストはコードやデータが変わったとき（push、手動）だけ実行し、定期実行では省く
+- **同時実行**: `concurrency: pages` を指定する。実行中のデプロイは途中で止めず、待機中の古い実行は新しい実行に置き換える
 - **注意点**
   - 公開リポジトリでは、60 日間リポジトリに動きがないと定期実行が自動で止まる。大会期間中はデータの更新で動きが出る想定だが、運用メモに残す
   - カスタムワークフローでデプロイする場合、Pages のビルド回数の上限（1 時間 10 回）は適用されない

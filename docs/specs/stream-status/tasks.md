@@ -58,11 +58,11 @@
 
 ## 5. データとデプロイ
 
-- [ ] 5-1. `data/teams.yaml` と `data/keywords.yaml` を用意する
+- [x] 5-1. `data/teams.yaml` と `data/keywords.yaml` を用意する
   - 最初はサンプルデータで作り、実際の出場者データはユーザーが用意する
-- [ ] 5-2. ワークフロー（`.github/workflows/deploy.yml`）を作る（AC-21）
+- [x] 5-2. ワークフロー（`.github/workflows/deploy.yml`）を作る（AC-21）
   - schedule（`*/5 * * * *`）、push、workflow_dispatch、`concurrency`、テスト → 生成 → ビルド → Pages へデプロイ
-- [ ] 5-3. 成果物に秘密情報が含まれないことを確かめる処理を、ワークフローに加える（AC-26）
+- [x] 5-3. 成果物に秘密情報が含まれないことを確かめる処理を、ワークフローに加える（AC-26）
   - `dist/` を Secrets の値で grep し、見つかったら失敗させる
 - [ ] 5-4. GitHub の設定（ユーザーが行う。手順を案内する）
   - 公開リポジトリの作成、Pages のソースを GitHub Actions にする、Secrets の登録、Secret scanning と Push protection の有効化、YouTube キーの API 制限

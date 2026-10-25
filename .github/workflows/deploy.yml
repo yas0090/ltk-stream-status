@@ -1,0 +1,77 @@
+name: deploy
+
+on:
+  # 配信状態の定期更新（AC-21）。GitHub 側の混雑で遅れることがある
+  schedule:
+    - cron: "*/5 * * * *"
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 実行中のデプロイは止めず、待機中の古い実行は新しい実行に置き換える
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # コードやデータが変わったときだけ実行し、定期実行では省く
+      - name: Test
+        if: github.event_name != 'schedule'
+        run: npm test
+
+      # データの検証と配信状態の取得。検証エラーなら失敗し、デプロイされない（AC-23）
+      - name: Generate site data
+        run: npm run generate
+        env:
+          TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+          TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+
+      - run: npm run build
+
+      # 配信されるファイルに秘密情報が含まれていないことを確かめる（AC-26）
+      - name: Check secrets are not in dist
+        run: |
+          for name in TWITCH_CLIENT_ID TWITCH_CLIENT_SECRET YOUTUBE_API_KEY; do
+            value="${!name}"
+            if [ -n "$value" ] && grep -rqF -- "$value" dist; then
+              echo "::error::dist に $name の値が含まれています"
+              exit 1
+            fi
+          done
+        env:
+          TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+          TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
