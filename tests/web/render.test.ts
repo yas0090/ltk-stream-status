@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { buildView, EMPTY_FILTER, type Filter } from "../../src/shared/filter";
 import type { TeamStatus } from "../../src/shared/types";
-import { renderStatusBar, renderTeams } from "../../src/web/render";
+import { renderStaleWarning, renderTeams, renderUpdatedAt } from "../../src/web/render";
 
 const teams: TeamStatus[] = [
   {
@@ -191,17 +191,17 @@ describe("renderTeams", () => {
   });
 });
 
-describe("renderStatusBar（AC-9, AC-10）", () => {
+describe("最終更新日時と古いデータの警告（AC-9, AC-10）", () => {
   const generatedAt = "2026-10-25T09:00:00.000Z";
 
   it("最終更新日時を表示する", () => {
-    const el = renderStatusBar(generatedAt, new Date(generatedAt));
-    expect(el.querySelector("time")?.getAttribute("datetime")).toBe(generatedAt);
-    expect(el.querySelector(".stale-warning")).toBeNull();
+    expect(renderUpdatedAt(generatedAt).querySelector("time")?.getAttribute("datetime")).toBe(generatedAt);
   });
 
-  it("30分以上たっていれば警告を表示する", () => {
-    const el = renderStatusBar(generatedAt, new Date(Date.parse(generatedAt) + 30 * 60_000));
-    expect(el.querySelector(".stale-warning")).not.toBeNull();
+  it("30分未満なら警告を出さず、30分以上たっていれば警告を出す", () => {
+    expect(renderStaleWarning(generatedAt, new Date(generatedAt))).toBeNull();
+    expect(renderStaleWarning(generatedAt, new Date(Date.parse(generatedAt) + 30 * 60_000))?.className).toBe(
+      "stale-warning",
+    );
   });
 });

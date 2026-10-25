@@ -3,7 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>LTK 配信状況</title>
+    <title>LTK Stream Status</title>
+    <!-- 保存したテーマを描画前に当て、ライトからのちらつきを防ぐ（AC-39） -->
+    <script>
+      try {
+        document.documentElement.dataset.theme =
+          localStorage.getItem("ltk-stream-status:theme:v1") === "dark" ? "dark" : "light";
+      } catch {
+        document.documentElement.dataset.theme = "light";
+      }
+    </script>
   </head>
   <body>
     <div id="app"></div>

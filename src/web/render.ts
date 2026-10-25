@@ -17,24 +17,22 @@ export const formatUpdatedAt = (generatedAt: string) =>
     minute: "2-digit",
   });
 
-// 最終更新日時と、30分以上たっていれば警告（AC-9, AC-10）
-export function renderStatusBar(generatedAt: string, now: Date): HTMLElement {
-  const stale = isStale(generatedAt, now);
-  return h(
-    "div",
-    { class: "status-bar" },
-    h("p", { class: "updated-at" }, "最終更新 ", h("time", { datetime: generatedAt }, formatUpdatedAt(generatedAt))),
-    stale &&
-      h(
+// 最終更新日時（AC-9）。ヘッダーに置く
+export const renderUpdatedAt = (generatedAt: string): HTMLElement =>
+  h("p", { class: "updated-at" }, "最終更新 ", h("time", { datetime: generatedAt }, formatUpdatedAt(generatedAt)));
+
+// 30分以上たっていれば警告（AC-10）。ヘッダーのすぐ下に帯で出す
+export const renderStaleWarning = (generatedAt: string, now: Date): HTMLElement | null =>
+  isStale(generatedAt, now)
+    ? h(
         "p",
         { class: "stale-warning", role: "alert" },
         "配信状態が30分以上更新されていません。表示が実際と違う可能性があります。",
-      ),
-  );
-}
+      )
+    : null;
 
 // アイコン画像がない、または読み込めないときは名前の頭文字を出す（AC-27）
-function renderAvatar(player: PlayerStatus): HTMLElement {
+export function renderAvatar(player: PlayerStatus): HTMLElement {
   const fallback = h("span", { class: "avatar avatar--fallback", "aria-hidden": "true" }, [...player.name][0] ?? "?");
   if (!player.avatarUrl) return fallback;
   const img = h("img", {
@@ -97,11 +95,11 @@ function renderPlayerCard(player: PlayerStatus): HTMLElement {
     h(
       "div",
       { class: "card-head" },
-      renderAvatar(player),
+      // チームカラーの赤と区別できるよう、配信中は色だけでなくバッジでも示す（AC-5）。
+      // バッジはアイコン画像の下端に重ね、名前の幅を確保する
+      h("span", { class: "avatar-wrap" }, renderAvatar(player), live && h("span", { class: "live-badge" }, "LIVE")),
       h("span", { class: "live-mark", role: "img", "aria-label": live ? "配信中" : "配信していない" }),
       h("span", { class: "player-name", title: player.name }, player.name),
-      // チームカラーの赤と区別できるよう、配信中は色だけでなくバッジでも示す（AC-5）
-      live && h("span", { class: "live-badge" }, "LIVE"),
     ),
     // ロール名はスマートフォンでだけ表示する（PC では列の見出しでわかる）
     h("div", { class: "platforms" }, player.channels.map(renderPlatformLink), h("span", { class: "role" }, roleIcon(player.role), player.role)),

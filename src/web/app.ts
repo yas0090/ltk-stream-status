@@ -1,8 +1,12 @@
 import { buildView, EMPTY_FILTER, type Filter } from "../shared/filter";
+import { pruneHidden } from "../shared/hidden";
 import type { SiteData } from "../shared/types";
+import { renderDetailFilter } from "./detail-filter";
 import { h } from "./dom";
-import { renderFilters } from "./filters";
-import { renderStatusBar, renderTeams } from "./render";
+import { renderFilters, setHiddenCount } from "./filters";
+import { renderStaleWarning, renderTeams, renderUpdatedAt } from "./render";
+import { loadHiddenPlayers, saveHiddenPlayers } from "./storage";
+import { renderThemeToggle } from "./theme";
 
 export const RELOAD_INTERVAL_MS = 5 * 60_000;
 export const STALE_CHECK_INTERVAL_MS = 60_000;
@@ -32,48 +36,80 @@ const renderFooter = () =>
     h(
       "p",
       {},
-      "LTK 配信状況は Riot Games の承認を受けたものではなく、Riot Games または League of Legends の制作・運営に公式に関わる人物の見解や意見を反映したものではありません。League of Legends および Riot Games は Riot Games, Inc. の商標または登録商標です。League of Legends © Riot Games, Inc.",
+      "LTK Stream Status は Riot Games の承認を受けたものではなく、Riot Games または League of Legends の制作・運営に公式に関わる人物の見解や意見を反映したものではありません。League of Legends および Riot Games は Riot Games, Inc. の商標または登録商標です。League of Legends © Riot Games, Inc.",
     ),
   );
 
 export function createApp(root: HTMLElement, { loadData, now = () => new Date() }: AppOptions) {
   let data: SiteData | undefined;
   let filter: Filter = EMPTY_FILTER;
+  // 詳細フィルタで非表示にした選手（AC-34）。簡易絞り込みとは別に持ち、変更のたびに保存する
+  let hiddenPlayers: ReadonlySet<string> = loadHiddenPlayers();
   let teamsKey = "";
+  let filtersForm: HTMLFormElement | undefined;
 
-  const statusSlot = h("div", { class: "status-slot" });
+  const updatedSlot = h("div", { class: "updated-slot" });
+  const staleSlot = h("div", { class: "stale-slot" });
   const filtersSlot = h("div", { class: "filters-slot" });
+  const detailSlot = h("div", { class: "detail-slot" });
   const listSlot = h("main", { class: "list-slot" });
   const errorSlot = h("p", { class: "load-error", role: "alert", hidden: true });
+
+  // スクロールしても常に表示されるヘッダー（AC-38）
   root.replaceChildren(
-    h("header", { class: "site-header" }, h("h1", {}, "LTK 配信状況"), statusSlot),
-    errorSlot,
-    filtersSlot,
-    listSlot,
-    renderFooter(),
+    h(
+      "div",
+      { class: "site-top" },
+      h(
+        "header",
+        { class: "site-header" },
+        h("h1", { class: "site-title" }, "LTK Stream Status"),
+        h("div", { class: "header-meta" }, updatedSlot, renderThemeToggle()),
+      ),
+      staleSlot,
+    ),
+    h("div", { class: "page" }, errorSlot, filtersSlot, listSlot, renderFooter()),
+    detailSlot,
   );
 
+  // 今のデータにいない選手のキーは表示の判定にも件数にも使わない（AC-37）
+  const visibleHidden = () => (data ? pruneHidden(hiddenPlayers, data.teams) : new Set<string>());
+
   const renderStatus = () => {
-    if (data) statusSlot.replaceChildren(renderStatusBar(data.generatedAt, now()));
+    if (!data) return;
+    updatedSlot.replaceChildren(renderUpdatedAt(data.generatedAt));
+    staleSlot.replaceChildren(renderStaleWarning(data.generatedAt, now()) ?? "");
   };
 
   const renderList = () => {
-    if (data) listSlot.replaceChildren(renderTeams(buildView(data.teams, filter)));
+    if (!data) return;
+    const hidden = visibleHidden();
+    listSlot.replaceChildren(renderTeams(buildView(data.teams, filter, hidden)));
+    if (filtersForm) setHiddenCount(filtersForm, hidden.size);
   };
 
-  // チーム構成が変わったときだけ絞り込み UI を作り直す（操作中のチェックを消さないため）
+  // チーム構成が変わったときだけ絞り込み UI と詳細フィルタを作り直す（操作中のチェックを消さないため）
   const renderFiltersIfChanged = () => {
     if (!data) return;
-    const key = data.teams.map((t) => `${t.id}:${t.name}`).join("\n");
+    const key = data.teams.map((t) => `${t.id}:${t.name}:${t.players.map((p) => p.name).join(",")}`).join("\n");
     if (key === teamsKey) return;
     teamsKey = key;
     filter = EMPTY_FILTER;
-    filtersSlot.replaceChildren(
-      renderFilters(data.teams, (next) => {
+    const detail = renderDetailFilter(data.teams, visibleHidden(), (next) => {
+      hiddenPlayers = next;
+      saveHiddenPlayers(next);
+      renderList();
+    });
+    detailSlot.replaceChildren(detail.dialog);
+    filtersForm = renderFilters(
+      data.teams,
+      (next) => {
         filter = next;
         renderList();
-      }),
+      },
+      detail.open,
     );
+    filtersSlot.replaceChildren(filtersForm);
   };
 
   const reload = async () => {

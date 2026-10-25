@@ -1,3 +1,4 @@
+import { playerKey } from "./hidden";
 import { groupByTier, type TierGroup } from "./sort";
 import type { PlayerStatus, TeamStatus, Tier } from "./types";
 
@@ -30,14 +31,23 @@ const matches = (team: TeamStatus, player: PlayerStatus, filter: Filter) =>
   (!filter.liveOnly || isPlayerLive(player)) &&
   (!filter.ltkOnly || hasLtkStream(player));
 
-// 出場者が0人になったチームと階級は含めない（AC-18）
-export function buildView(teams: readonly TeamStatus[], filter: Filter): TeamView[] {
+// 出場者が0人になったチームと階級は含めない（AC-18）。
+// hiddenPlayers は詳細フィルタで非表示にした選手で、簡易絞り込みと AND で効く（AC-33）
+export function buildView(
+  teams: readonly TeamStatus[],
+  filter: Filter,
+  hiddenPlayers: ReadonlySet<string> = new Set(),
+): TeamView[] {
   return teams
     .map((team) => ({
       id: team.id,
       name: team.name,
       color: team.color,
-      tiers: groupByTier(team.players.filter((player) => matches(team, player, filter))),
+      tiers: groupByTier(
+        team.players.filter(
+          (player) => !hiddenPlayers.has(playerKey(team.id, player.name)) && matches(team, player, filter),
+        ),
+      ),
     }))
     .filter((team) => team.tiers.length > 0);
 }

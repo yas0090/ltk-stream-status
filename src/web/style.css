@@ -1,5 +1,6 @@
 :root {
-  color-scheme: light dark;
+  /* 初期値はライト。data-theme="dark" でダークに切り替える（AC-39） */
+  color-scheme: light;
   --bg: #f6f7f9;
   --surface: #ffffff;
   --text: #1c2024;
@@ -18,25 +19,24 @@
   --chip-checked-text: #ffffff;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #111113;
-    --surface: #1b1b1f;
-    --text: #edeef0;
-    --text-muted: #a0a3ab;
-    --border: #2e3035;
-    --live: #ff6369;
-    --offline: #5a5c63;
-    --ltk-bg: #4493f8;
-    --ltk-text: #0b0d10;
-    --twitch: #a970ff;
-    --youtube: #ff4e5f;
-    --warning-bg: #3a2a00;
-    --warning-text: #ffd27a;
-    --error: #ff6369;
-    --chip-checked-bg: #edeef0;
-    --chip-checked-text: #111113;
-  }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111113;
+  --surface: #1b1b1f;
+  --text: #edeef0;
+  --text-muted: #a0a3ab;
+  --border: #2e3035;
+  --live: #ff6369;
+  --offline: #5a5c63;
+  --ltk-bg: #4493f8;
+  --ltk-text: #0b0d10;
+  --twitch: #a970ff;
+  --youtube: #ff4e5f;
+  --warning-bg: #3a2a00;
+  --warning-text: #ffd27a;
+  --error: #ff6369;
+  --chip-checked-bg: #edeef0;
+  --chip-checked-text: #111113;
 }
 
 *,
@@ -53,7 +53,7 @@ body {
   line-height: 1.5;
 }
 
-#app {
+.page {
   max-width: 1280px;
   margin: 0 auto;
   padding: 16px;
@@ -69,21 +69,71 @@ a {
   color: inherit;
 }
 
-/* ヘッダー */
-.site-header h1 {
+/* ヘッダー: スクロールしても常に表示する（AC-38） */
+.site-top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.site-header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 10px 16px;
+}
+
+.site-title {
   margin: 0;
-  font-size: 1.375rem;
+  font-size: 1.125rem;
+  white-space: nowrap;
+}
+
+.header-meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
 }
 
 .updated-at {
-  margin: 4px 0 0;
+  margin: 0;
   color: var(--text-muted);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
+  white-space: nowrap;
 }
 
-.stale-warning,
+.theme-toggle {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+/* 古いデータの警告はヘッダーのすぐ下に帯で出す（AC-10） */
+.stale-warning {
+  margin: 0;
+  padding: 6px 16px;
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
 .load-error {
-  margin: 12px 0 0;
+  margin: 0 0 12px;
   padding: 8px 12px;
   border-radius: 8px;
   background: var(--warning-bg);
@@ -208,6 +258,35 @@ a {
   outline-offset: 2px;
 }
 
+.filters-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.detail-open {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 12px;
+  border: 1px solid var(--text);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.hidden-count:not(:empty) {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--surface);
+  font-size: 0.6875rem;
+  line-height: 18px;
+}
+
 .reset {
   padding: 4px 12px;
   border: 1px solid var(--border);
@@ -267,14 +346,34 @@ a {
   font-weight: 600;
 }
 
+/* 階級ラベル: Core はチームカラー、Masters は黒寄り、Next は白寄り（チームの背景よりは濃い） */
+.tier-row {
+  --tier-bg: var(--team-color);
+  --tier-text: #ffffff;
+}
+
+.tier-row[data-tier="Masters"] {
+  --tier-bg: color-mix(in srgb, var(--team-color) 60%, #000000);
+}
+
+.tier-row[data-tier="Next"] {
+  --tier-bg: color-mix(in srgb, var(--team-color) 70%, #ffffff);
+}
+
 .tier-name {
-  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
   margin: 0;
-  padding-left: 8px;
-  border-left: 3px solid var(--team-color);
-  color: var(--text-muted);
+  padding: 0 6px;
+  border-radius: 8px;
+  background: var(--tier-bg);
+  color: var(--tier-text);
+  /* 明るい背景（Next やオレンジ・緑）でも白い文字が読めるよう、薄い影を付ける */
+  text-shadow: 0 1px 2px rgb(0 0 0 / 35%);
   font-size: 0.8125rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.04em;
 }
 
@@ -300,14 +399,14 @@ a {
   background: color-mix(in srgb, var(--text-muted) 7%, var(--surface));
 }
 
-/* 配信中: LTK 関連は赤の太枠、それ以外は薄い赤の細枠 */
+/* 配信中の枠はチームカラーを基本にする: LTK 関連は太枠、それ以外は薄めた細枠 */
 .player-card[data-live="true"] {
-  border-color: color-mix(in srgb, var(--live) 45%, var(--surface));
+  border-color: color-mix(in srgb, var(--team-color) 50%, var(--surface));
 }
 
 .player-card[data-live="true"][data-ltk="true"] {
-  border-color: var(--live);
-  box-shadow: 0 0 0 1px var(--live);
+  border-color: var(--team-color);
+  box-shadow: 0 0 0 1px var(--team-color);
 }
 
 .slot-empty {
@@ -315,17 +414,26 @@ a {
 }
 
 /* チームカラーの赤と区別できるよう、配信中はバッジでも示す（AC-5） */
-.live-badge {
+.avatar-wrap {
+  position: relative;
   flex: none;
-  margin-left: auto;
-  padding: 0 6px;
-  border-radius: 4px;
+  display: inline-flex;
+}
+
+.live-badge {
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  padding: 0 3px;
+  border: 1px solid var(--surface);
+  border-radius: 3px;
   background: var(--live);
   color: #ffffff;
-  font-size: 0.625rem;
+  font-size: 0.5rem;
   font-weight: 800;
   letter-spacing: 0.04em;
-  line-height: 16px;
+  line-height: 11px;
+  transform: translateX(-50%);
 }
 
 /* LoL 公式のポジションアイコン（AC-29）。色はテーマに合わせる */
@@ -549,9 +657,191 @@ a {
 
   .tier-name {
     grid-column: 1 / -1;
+    justify-content: flex-start;
+    padding: 4px 10px;
   }
 
   .role {
     display: inline-flex;
+  }
+}
+
+/* 詳細フィルタのモーダル（AC-31） */
+.detail-filter {
+  width: min(1000px, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 64px);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.detail-filter[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-filter::backdrop {
+  background: rgb(0 0 0 / 45%);
+}
+
+.df-head {
+  padding: 16px 16px 8px;
+}
+
+.df-head h2 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.df-hint {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.df-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+  /* モーダルの高さに合わせて行が縮まないよう、行は中身の高さにしてスクロールさせる */
+  grid-auto-rows: max-content;
+  align-content: start;
+  gap: 12px;
+  min-height: 0;
+  padding: 8px 16px;
+  overflow-y: auto;
+}
+
+.df-team {
+  overflow: hidden;
+  border: 2px solid var(--team-color);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--team-color) 5%, var(--surface));
+}
+
+.df-team label {
+  cursor: pointer;
+}
+
+.df-team input {
+  flex: none;
+  accent-color: var(--team-color);
+}
+
+.df-team-toggle {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 12px;
+  background: var(--team-color);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.df-tier {
+  padding: 8px 12px;
+}
+
+.df-tier + .df-tier {
+  border-top: 1px solid var(--team-border, var(--border));
+}
+
+.df-tier-toggle {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.df-players {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.df-player-toggle {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  min-width: 0;
+  padding: 3px 10px 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.8125rem;
+}
+
+.df-player-toggle:has(input:not(:checked)) {
+  opacity: 0.55;
+}
+
+.df-player-toggle .avatar {
+  width: 20px;
+  height: 20px;
+  border-width: 1px;
+  font-size: 0.625rem;
+}
+
+.df-role {
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.df-foot {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.df-foot button {
+  padding: 6px 16px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.df-foot .df-close {
+  border-color: var(--text);
+  background: var(--text);
+  color: var(--surface);
+}
+
+/* スマートフォンでは詳細フィルタを画面いっぱいに出し、ヘッダーを詰める */
+@media (max-width: 719px) {
+  .site-header {
+    padding: 8px 12px;
+  }
+
+  .site-title {
+    font-size: 1rem;
+  }
+
+  .updated-at {
+    font-size: 0.75rem;
+  }
+
+  .detail-filter {
+    width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .df-body {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

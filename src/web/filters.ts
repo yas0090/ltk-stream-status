@@ -41,6 +41,7 @@ const readFilter = (form: HTMLFormElement): Filter => {
 export function renderFilters(
   teams: readonly { id: string; name: string; color?: string }[],
   onChange: (filter: Filter) => void,
+  onOpenDetail?: () => void,
 ): HTMLFormElement {
   const form = h(
     "form",
@@ -49,16 +50,28 @@ export function renderFilters(
       "div",
       { class: "filters-head" },
       h("span", { class: "filters-title" }, "絞り込み"),
-      h("button", { type: "reset", class: "reset" }, "解除"),
+      h(
+        "div",
+        { class: "filters-actions" },
+        onOpenDetail && h("button", { type: "button", class: "detail-open" }, "詳細フィルタ", h("span", { class: "hidden-count" })),
+        h("button", { type: "reset", class: "reset" }, "解除"),
+      ),
     ),
     group("チーム", ...teams.map((team) => checkbox("team", team.id, team.name, team.color))),
     group("階級", ...TIERS.map((tier) => checkbox("tier", tier, tier))),
     group("配信", checkbox("liveOnly", "1", "配信中のみ"), checkbox("ltkOnly", "1", "LTK のみ")),
   );
 
+  form.querySelector(".detail-open")?.addEventListener("click", () => onOpenDetail?.());
   form.addEventListener("change", () => onChange(readFilter(form)));
   form.addEventListener("submit", (event) => event.preventDefault());
   // reset イベントはチェックが外れる前に発生するので、結果は EMPTY_FILTER を直接渡す
   form.addEventListener("reset", () => onChange(EMPTY_FILTER));
   return form;
+}
+
+// 詳細フィルタで非表示にしている人数を、ボタンに添える（AC-35）
+export function setHiddenCount(form: HTMLFormElement, count: number): void {
+  const badge = form.querySelector(".hidden-count");
+  if (badge) badge.textContent = count > 0 ? `${count}人を非表示` : "";
 }

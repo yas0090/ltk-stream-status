@@ -109,6 +109,51 @@ describe("createApp（AC-10）", () => {
   });
 });
 
+describe("固定ヘッダー（AC-38）", () => {
+  it("サイト名・最終更新日時・テーマの切り替えがヘッダーにある", async () => {
+    const root = await start(async () => siteData(T0));
+    const header = root.querySelector(".site-header")!;
+    expect(header.querySelector(".site-title")?.textContent).toBe("LTK Stream Status");
+    expect(header.querySelector("time")?.getAttribute("datetime")).toBe(T0.toISOString());
+    expect(header.querySelector(".theme-toggle")).not.toBeNull();
+  });
+
+  it("古いデータの警告はヘッダーの下の帯に出る（AC-10）", async () => {
+    const root = await start(async () => siteData(T0));
+    await vi.advanceTimersByTimeAsync(30 * 60_000);
+    expect(root.querySelector(".site-top .stale-slot .stale-warning")).not.toBeNull();
+  });
+});
+
+describe("詳細フィルタの組み込み（AC-33〜35）", () => {
+  beforeEach(() => localStorage.clear());
+
+  it("詳細フィルタで非表示にした選手は一覧から消え、人数が表示され、保存される", async () => {
+    const root = await start(async () => siteData(T0));
+    root.querySelector<HTMLButtonElement>(".detail-open")!.click();
+    expect(root.querySelector<HTMLDialogElement>("dialog.detail-filter")?.open).toBe(true);
+
+    const box = [...root.querySelectorAll<HTMLLabelElement>(".df-player-toggle")]
+      .find((l) => l.textContent?.includes("選手1"))!
+      .querySelector("input")!;
+    box.click();
+
+    expect(root.querySelector(".player-card")).toBeNull();
+    expect(root.querySelector(".hidden-count")?.textContent).toBe("1人を非表示");
+    expect(localStorage.getItem("ltk-stream-status:hidden-players:v1")).toBe('["a:選手1"]');
+  });
+
+  it("保存済みの設定を読み込んで適用し、簡易絞り込みの「解除」では戻らない", async () => {
+    localStorage.setItem("ltk-stream-status:hidden-players:v1", '["a:選手1","a:いない人"]');
+    const root = await start(async () => siteData(T0));
+    expect(root.querySelector(".player-card")).toBeNull();
+    expect(root.querySelector(".hidden-count")?.textContent).toBe("1人を非表示");
+
+    root.querySelector<HTMLButtonElement>("button.reset")!.click();
+    expect(root.querySelector(".player-card")).toBeNull();
+  });
+});
+
 describe("fetchSiteData", () => {
   it("キャッシュを避けるためタイムスタンプ付きで読み込む", async () => {
     const fetchMock = vi.fn(async () => new Response(JSON.stringify(siteData(T0))));
