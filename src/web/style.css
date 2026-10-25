@@ -113,13 +113,9 @@ a {
 }
 
 .filter-group {
-  display: grid;
-  grid-template-columns: 4rem minmax(0, 1fr);
-  gap: 8px;
-  align-items: center;
   min-width: 0;
   margin: 0;
-  padding: 8px 12px;
+  padding: 0;
   border: 0;
 }
 
@@ -127,17 +123,35 @@ a {
   border-top: 1px solid var(--border);
 }
 
-/* legend を通常の要素として grid に並べるため float にする */
-.filter-group legend {
-  float: left;
-  padding: 0;
+.filter-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 8px 12px;
+}
+
+.filter-label {
+  flex: none;
+  width: 4rem;
+  /* チップ1行分の高さに合わせ、チップが折り返してもラベルは1行目に揃える */
+  line-height: 31px;
   color: var(--text-muted);
   font-size: 0.75rem;
   font-weight: 700;
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 .chips {
   display: flex;
+  flex: 1;
   flex-wrap: wrap;
   gap: 6px;
   min-width: 0;
@@ -218,7 +232,7 @@ a {
   overflow: hidden;
   border: 2px solid var(--team-color);
   border-radius: 12px;
-  background: var(--surface);
+  background: color-mix(in srgb, var(--team-color) 5%, var(--surface));
 }
 
 /* 見出しをチームカラーで塗る（AC-28） */
@@ -278,7 +292,7 @@ a {
   min-width: 0;
   padding: 8px 10px;
   border: 1px solid var(--team-border);
-  background: color-mix(in srgb, var(--team-color) 9%, var(--surface));
+  background: var(--surface);
 }
 
 .player-card[data-live="true"] {

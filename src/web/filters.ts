@@ -11,9 +11,20 @@ const checkbox = (name: string, value: string, label: string, color?: string) =>
     h("span", {}, label),
   );
 
-// カテゴリごとに1行にし、左端にカテゴリ名を置く
+// カテゴリごとに1行にし、左端にカテゴリ名を置く。
+// legend はブラウザごとに描画が違うので読み上げ用にだけ使い、見た目のカテゴリ名は span で描く
 const group = (legend: string, ...chips: HTMLElement[]) =>
-  h("fieldset", { class: "filter-group" }, h("legend", {}, legend), h("div", { class: "chips" }, chips));
+  h(
+    "fieldset",
+    { class: "filter-group" },
+    h("legend", { class: "visually-hidden" }, legend),
+    h(
+      "div",
+      { class: "filter-row" },
+      h("span", { class: "filter-label", "aria-hidden": "true" }, legend),
+      h("div", { class: "chips" }, chips),
+    ),
+  );
 
 const readFilter = (form: HTMLFormElement): Filter => {
   const checked = (name: string) =>
