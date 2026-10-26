@@ -1,15 +1,15 @@
 :root {
   /* 初期値はライト。data-theme="dark" でダークに切り替える（AC-39） */
   color-scheme: light;
-  --bg: #f6f7f9;
+  --bg: #eceef2;
   --surface: #ffffff;
   --text: #1c2024;
   --text-muted: #60646c;
   --border: #e0e1e6;
   --live: #e5484d;
   --offline: #b9bbc6;
-  /* 配信していない選手カードの背景。ライトはわずかに灰色、ダークは一段暗くする */
-  --offline-card: color-mix(in srgb, var(--text-muted) 7%, var(--surface));
+  /* 配信していない選手カードの背景。ライトは灰色、ダークは一段暗くする */
+  --offline-card: color-mix(in srgb, var(--text-muted) 12%, var(--surface));
   --ltk-bg: #1f6feb;
   --ltk-text: #ffffff;
   --twitch: #9146ff;
@@ -319,6 +319,11 @@ a {
   background: color-mix(in srgb, var(--team-color) 5%, var(--surface));
 }
 
+/* ライトでは白い面が多くなりすぎないよう、チームカードの色を少し濃くする */
+:root:not([data-theme="dark"]) .team {
+  background: color-mix(in srgb, var(--team-color) 9%, var(--surface));
+}
+
 /* 見出しをチームカラーで塗る（AC-28） */
 .team-name {
   margin: 0;
@@ -399,8 +404,10 @@ a {
   background: var(--surface);
 }
 
-/* 配信していない選手は、配信中のカードより沈んだ色にする */
+/* 配信していない選手は、配信中のカードより沈んだ色にし、枠を点線にする */
 .player-card[data-live="false"] {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--team-color) 55%, var(--surface));
   background: var(--offline-card);
 }
 
@@ -424,6 +431,11 @@ a {
   overflow: hidden;
   border-radius: 6px;
   background: color-mix(in srgb, var(--team-color) 12%, var(--surface));
+}
+
+/* ライトでは、配信していないカードの灰色に溶け込まないよう、画像枠のチームカラーを濃くする */
+:root:not([data-theme="dark"]) .player-card[data-live="false"] .thumb {
+  background: color-mix(in srgb, var(--team-color) 22%, var(--surface));
 }
 
 .thumb-link,
