@@ -69,6 +69,13 @@ describe("createApp（AC-10）", () => {
     expect(footer).toContain("Riot Games の承認を受けたものではなく");
   });
 
+  it("ページ下部に訂正・削除の依頼を受ける連絡先（X）を載せる（AC-30）", async () => {
+    const root = await start(async () => siteData(T0));
+    const link = root.querySelector<HTMLAnchorElement>('footer a[href="https://x.com/yascrime"]');
+    expect(link?.textContent).toBe("@yascrime");
+    expect(link?.target).toBe("_blank");
+  });
+
   it("5分ごとにデータを読み直す", async () => {
     const loadData = vi.fn(async () => siteData(new Date(), `更新 ${Date.now()}`));
     const root = await start(loadData);

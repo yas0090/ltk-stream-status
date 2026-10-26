@@ -3,7 +3,7 @@ import { pruneHidden } from "../shared/hidden";
 import { pickNotice } from "../shared/schedule";
 import type { SiteData } from "../shared/types";
 import { renderDetailFilter } from "./detail-filter";
-import { h } from "./dom";
+import { externalLink, h } from "./dom";
 import { renderFilters, setHiddenCount } from "./filters";
 import { renderNotice } from "./notice";
 import { renderStaleWarning, renderTeams, renderUpdatedAt } from "./render";
@@ -34,6 +34,14 @@ const renderFooter = () =>
       "p",
       {},
       "このサイトは非公式のファンサイトで、League The k4sen（LTK）の運営とは関係ありません。配信状態は Twitch API と YouTube Data API から取得しています。",
+    ),
+    // 訂正・削除の依頼や不具合の報告を受ける連絡先。サイト専用のアカウントで、作者の名前やメールアドレスは載せない
+    h(
+      "p",
+      {},
+      "掲載内容の訂正・削除のご依頼や不具合の報告は、X の ",
+      externalLink("https://x.com/yascrime", {}, "@yascrime"),
+      " までお願いします。",
     ),
     h(
       "p",
