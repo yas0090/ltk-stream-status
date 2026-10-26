@@ -37,7 +37,7 @@ const readFilter = (form: HTMLFormElement): Filter => {
   };
 };
 
-// チーム・階級は複数選択、配信中のみ・LTK のみは切り替え（AC-15〜19）
+// チーム・階級は複数選択、配信中・LTK は切り替え（AC-15〜19）。両方選ぶと AND になるので「〜のみ」とは書かない
 export function renderFilters(
   teams: readonly { id: string; name: string; color?: string }[],
   onChange: (filter: Filter) => void,
@@ -59,7 +59,7 @@ export function renderFilters(
     ),
     group("チーム", ...teams.map((team) => checkbox("team", team.id, team.name, team.color))),
     group("階級", ...TIERS.map((tier) => checkbox("tier", tier, tier))),
-    group("配信", checkbox("liveOnly", "1", "配信中のみ"), checkbox("ltkOnly", "1", "LTK のみ")),
+    group("配信", checkbox("liveOnly", "1", "配信中"), checkbox("ltkOnly", "1", "LTK")),
   );
 
   form.querySelector(".detail-open")?.addEventListener("click", () => onOpenDetail?.());

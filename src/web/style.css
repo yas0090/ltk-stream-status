@@ -8,6 +8,8 @@
   --border: #e0e1e6;
   --live: #e5484d;
   --offline: #b9bbc6;
+  /* 配信していない選手カードの背景。ライトはわずかに灰色、ダークは一段暗くする */
+  --offline-card: color-mix(in srgb, var(--text-muted) 7%, var(--surface));
   --ltk-bg: #1f6feb;
   --ltk-text: #ffffff;
   --twitch: #9146ff;
@@ -28,6 +30,7 @@
   --border: #2e3035;
   --live: #ff6369;
   --offline: #5a5c63;
+  --offline-card: color-mix(in srgb, #000000 35%, var(--surface));
   --ltk-bg: #4493f8;
   --ltk-text: #0b0d10;
   --twitch: #a970ff;
@@ -396,9 +399,9 @@ a {
   background: var(--surface);
 }
 
-/* 配信していない選手はわずかに灰色にする */
+/* 配信していない選手は、配信中のカードより沈んだ色にする */
 .player-card[data-live="false"] {
-  background: color-mix(in srgb, var(--text-muted) 7%, var(--surface));
+  background: var(--offline-card);
 }
 
 /* 配信中の枠はチームカラーを基本にする: LTK 関連は太枠、それ以外は薄めた細枠 */

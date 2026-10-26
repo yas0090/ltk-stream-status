@@ -20,10 +20,10 @@ const setup = () => {
 };
 
 describe("renderFilters（AC-15〜19）", () => {
-  it("チーム・階級・配信中のみ・LTK のみの選択肢がある", () => {
+  it("チーム・階級・配信中・LTK の選択肢がある", () => {
     const { form } = setup();
     const labels = [...form.querySelectorAll("label")].map((l) => l.textContent);
-    expect(labels).toEqual(["チームA", "チームB", "Masters", "Core", "Next", "配信中のみ", "LTK のみ"]);
+    expect(labels).toEqual(["チームA", "チームB", "Masters", "Core", "Next", "配信中", "LTK"]);
   });
 
   it("カテゴリごとに分かれ、チームのチップにはチームカラーが付く", () => {
