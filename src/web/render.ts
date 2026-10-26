@@ -85,21 +85,21 @@ function renderStreamLine(player: PlayerStatus): HTMLElement {
   return h("div", { class: "stream-line" }, failed && h("span", { class: "fetch-error" }, "取得失敗"));
 }
 
-// サムネイルの代わりに、アイコン画像を大きく置いて状態を示す（AC-42）
-const renderThumbPlaceholder = (player: PlayerStatus, label: string) =>
-  h("div", { class: "thumb-placeholder" }, renderAvatar(player), h("span", { class: "thumb-label" }, label));
+// サムネイルの代わりに状態だけを示す。アイコン画像はカードの名前の横にあるので、ここには置かない（AC-42）
+const renderThumbPlaceholder = (label: string) =>
+  h("div", { class: "thumb-placeholder" }, h("span", { class: "thumb-label" }, label));
 
-// 16:9 の画像枠。配信中は最初の配信のサムネイル、配信していないときはアイコン画像と OFFLINE（AC-42）。
-// 画像を読み込めないときは、アイコン画像と配信状態の表示に切り替える
+// 16:9 の画像枠。配信中は最初の配信のサムネイル、配信していないときは OFFLINE（AC-42）。
+// 画像を読み込めないときは LIVE の表示に切り替える
 function renderThumb(player: PlayerStatus, live: boolean): HTMLElement {
   const stream = player.channels.flatMap((c) => c.streams).find((s) => s.thumbnailUrl);
   const thumb = h("div", { class: "thumb" });
   if (!stream?.thumbnailUrl) {
-    thumb.append(renderThumbPlaceholder(player, live ? "LIVE" : "OFFLINE"));
+    thumb.append(renderThumbPlaceholder(live ? "LIVE" : "OFFLINE"));
     return thumb;
   }
   const img = h("img", { class: "thumb-img", src: stream.thumbnailUrl, alt: "", loading: "lazy", referrerpolicy: "no-referrer" });
-  img.addEventListener("error", () => thumb.replaceChildren(renderThumbPlaceholder(player, "LIVE")), { once: true });
+  img.addEventListener("error", () => thumb.replaceChildren(renderThumbPlaceholder("LIVE")), { once: true });
   thumb.append(externalLink(stream.url, { class: "thumb-link", "aria-label": `${player.name} の配信を開く` }, img));
   return thumb;
 }

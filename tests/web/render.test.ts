@@ -109,14 +109,14 @@ describe("renderTeams", () => {
     expect(link.querySelector("img")?.getAttribute("src")).toBe("https://thumb/1.jpg");
   });
 
-  it("配信していないときは、アイコン画像と OFFLINE を表示する（AC-42）", () => {
+  it("配信していないときは、OFFLINE とだけ表示する（アイコン画像は名前の横にあるので出さない）（AC-42）", () => {
     const thumb = card(render(), "配信していない人").querySelector(".thumb")!;
     expect(thumb.querySelector(".thumb-img")).toBeNull();
-    expect(thumb.querySelector(".avatar")).not.toBeNull();
-    expect(thumb.querySelector(".thumb-label")?.textContent).toBe("OFFLINE");
+    expect(thumb.querySelector(".avatar")).toBeNull();
+    expect(thumb.textContent).toBe("OFFLINE");
   });
 
-  it("サムネイルを読み込めなければ、アイコン画像と LIVE に切り替える（AC-42）", () => {
+  it("サムネイルを読み込めなければ、LIVE の表示に切り替える（AC-42）", () => {
     const thumb = card(render(), "配信中の人").querySelector(".thumb")!;
     thumb.querySelector("img")!.dispatchEvent(new Event("error"));
     expect(thumb.querySelector(".thumb-img")).toBeNull();

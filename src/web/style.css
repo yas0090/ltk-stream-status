@@ -308,6 +308,8 @@ a {
 .team {
   --team-color: var(--text-muted);
   --team-border: color-mix(in srgb, var(--team-color) 35%, var(--border));
+  /* ロールのアイコンと名前。チームカラーに文字色を混ぜ、ダークモードでも読めるようにする */
+  --role-color: color-mix(in srgb, var(--team-color) 75%, var(--text));
   overflow: hidden;
   border: 2px solid var(--team-color);
   border-radius: 12px;
@@ -341,7 +343,7 @@ a {
   gap: 4px;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted);
+  color: var(--role-color);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -433,26 +435,16 @@ a {
 }
 
 .thumb-placeholder {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   height: 100%;
-}
-
-/* 枠の高さに合わせて大きさを決め、スマートフォンの小さい枠でもはみ出さないようにする */
-.thumb-placeholder .avatar {
-  width: auto;
-  height: 52%;
-  aspect-ratio: 1;
 }
 
 .thumb-label {
   color: var(--text-muted);
-  font-size: 0.625rem;
+  font-size: 0.75rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
 }
 
 .player-card[data-live="true"] .thumb-label {
@@ -482,7 +474,7 @@ a {
   transform: translateX(-50%);
 }
 
-/* LoL 公式のポジションアイコン（AC-29）。色はテーマに合わせる */
+/* LoL 公式のポジションアイコン（AC-29）。色は周りの文字色に合わせる */
 .role-icon {
   display: inline-block;
   flex: none;
@@ -577,7 +569,7 @@ a {
   align-items: center;
   gap: 3px;
   margin-left: auto;
-  color: var(--text-muted);
+  color: var(--role-color);
   font-size: 0.6875rem;
   font-weight: 600;
 }
