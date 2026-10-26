@@ -36,7 +36,7 @@ const renderFooter = () =>
     h(
       "p",
       {},
-      "LTK Stream Status は Riot Games の承認を受けたものではなく、Riot Games または League of Legends の制作・運営に公式に関わる人物の見解や意見を反映したものではありません。League of Legends および Riot Games は Riot Games, Inc. の商標または登録商標です。League of Legends © Riot Games, Inc.",
+      "LTK4 Live Now は Riot Games の承認を受けたものではなく、Riot Games または League of Legends の制作・運営に公式に関わる人物の見解や意見を反映したものではありません。League of Legends および Riot Games は Riot Games, Inc. の商標または登録商標です。League of Legends © Riot Games, Inc.",
     ),
   );
 
@@ -63,7 +63,7 @@ export function createApp(root: HTMLElement, { loadData, now = () => new Date() 
       h(
         "header",
         { class: "site-header" },
-        h("h1", { class: "site-title" }, "LTK Stream Status"),
+        h("h1", { class: "site-title" }, "LTK4 Live Now"),
         h("div", { class: "header-meta" }, updatedSlot, renderThemeToggle()),
       ),
       staleSlot,

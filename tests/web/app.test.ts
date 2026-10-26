@@ -115,7 +115,7 @@ describe("固定ヘッダー（AC-38）", () => {
   it("サイト名・最終更新日時・テーマの切り替えがヘッダーにある", async () => {
     const root = await start(async () => siteData(T0));
     const header = root.querySelector(".site-header")!;
-    expect(header.querySelector(".site-title")?.textContent).toBe("LTK Stream Status");
+    expect(header.querySelector(".site-title")?.textContent).toBe("LTK4 Live Now");
     expect(header.querySelector("time")?.getAttribute("datetime")).toBe(T0.toISOString());
     expect(header.querySelector(".theme-toggle")).not.toBeNull();
   });
