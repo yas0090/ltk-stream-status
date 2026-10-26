@@ -85,13 +85,33 @@ function renderStreamLine(player: PlayerStatus): HTMLElement {
   return h("div", { class: "stream-line" }, failed && h("span", { class: "fetch-error" }, "取得失敗"));
 }
 
-// 選手カード。配信の有無にかかわらず同じ3行構成（AC-5〜8, AC-22, AC-27）
+// サムネイルの代わりに、アイコン画像を大きく置いて状態を示す（AC-42）
+const renderThumbPlaceholder = (player: PlayerStatus, label: string) =>
+  h("div", { class: "thumb-placeholder" }, renderAvatar(player), h("span", { class: "thumb-label" }, label));
+
+// 16:9 の画像枠。配信中は最初の配信のサムネイル、配信していないときはアイコン画像と OFFLINE（AC-42）。
+// 画像を読み込めないときは、アイコン画像と配信状態の表示に切り替える
+function renderThumb(player: PlayerStatus, live: boolean): HTMLElement {
+  const stream = player.channels.flatMap((c) => c.streams).find((s) => s.thumbnailUrl);
+  const thumb = h("div", { class: "thumb" });
+  if (!stream?.thumbnailUrl) {
+    thumb.append(renderThumbPlaceholder(player, live ? "LIVE" : "OFFLINE"));
+    return thumb;
+  }
+  const img = h("img", { class: "thumb-img", src: stream.thumbnailUrl, alt: "", loading: "lazy", referrerpolicy: "no-referrer" });
+  img.addEventListener("error", () => thumb.replaceChildren(renderThumbPlaceholder(player, "LIVE")), { once: true });
+  thumb.append(externalLink(stream.url, { class: "thumb-link", "aria-label": `${player.name} の配信を開く` }, img));
+  return thumb;
+}
+
+// 選手カード。配信の有無にかかわらず同じ構成・同じ大きさ（AC-5〜8, AC-22, AC-27, AC-42）
 function renderPlayerCard(player: PlayerStatus): HTMLElement {
   const live = isPlayerLive(player);
   return h(
     "article",
     // data-ltk で、LTK 関連の配信とそれ以外の配信の枠を分ける
     { class: "player-card", "data-live": String(live), "data-ltk": String(hasLtkStream(player)), "data-role": player.role },
+    renderThumb(player, live),
     h(
       "div",
       { class: "card-head" },

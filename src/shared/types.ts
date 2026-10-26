@@ -14,6 +14,8 @@ export type Stream = {
   title: string;
   url: string;
   ltk: boolean;
+  // 配信のサムネイル（AC-42）
+  thumbnailUrl?: string;
 };
 
 export type ChannelStatus = {

@@ -30,6 +30,19 @@ describe("fetchTwitchStatuses", () => {
     expect(result.get("bob")).toEqual({ state: "offline", streams: [] });
   });
 
+  it("サムネイルの大きさを埋め、取得時刻を付ける（AC-42）", async () => {
+    const now = new Date("2026-10-26T12:00:00Z");
+    const fetchFn = mockFetch(() =>
+      json({
+        data: [{ ...stream("alice", "t"), thumbnail_url: "https://static-cdn.jtvnw.net/previews-ttv/live_user_alice-{width}x{height}.jpg" }],
+      }),
+    );
+    const result = await fetchTwitchStatuses(["alice"], credentials, fetchFn, undefined, now);
+    expect(result.get("alice")?.streams[0]?.thumbnailUrl).toBe(
+      `https://static-cdn.jtvnw.net/previews-ttv/live_user_alice-440x248.jpg?t=${now.getTime()}`,
+    );
+  });
+
   it("ログイン名の大文字・小文字の違いを吸収する", async () => {
     const fetchFn = mockFetch(() => json({ data: [stream("alice", "t")] }));
     const result = await fetchTwitchStatuses(["Alice"], credentials, fetchFn);

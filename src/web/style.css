@@ -380,16 +380,16 @@ a {
 /* 選手カード: 配信の有無にかかわらず同じ高さ（3行固定） */
 .player-card,
 .slot-empty {
-  height: 100px;
   border-radius: 10px;
 }
 
+/* 画像枠は 16:9 で常に確保し、その下の 3 行も高さを固定する。同じ幅のカードはすべて同じ高さになる（AC-42） */
 .player-card {
   display: grid;
-  grid-template-rows: 32px 20px 18px;
+  grid-template-rows: auto 32px 20px 18px;
   gap: 6px;
   min-width: 0;
-  padding: 8px 10px;
+  padding: 8px 10px 10px;
   border: 1px solid var(--team-border);
   background: var(--surface);
 }
@@ -411,6 +411,52 @@ a {
 
 .slot-empty {
   border: 1px dashed var(--team-border);
+}
+
+.thumb {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--team-color) 12%, var(--surface));
+}
+
+.thumb-link,
+.thumb-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.thumb-img {
+  object-fit: cover;
+}
+
+.thumb-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+/* 枠の高さに合わせて大きさを決め、スマートフォンの小さい枠でもはみ出さないようにする */
+.thumb-placeholder .avatar {
+  width: auto;
+  height: 52%;
+  aspect-ratio: 1;
+}
+
+.thumb-label {
+  color: var(--text-muted);
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.player-card[data-live="true"] .thumb-label {
+  color: var(--live);
 }
 
 /* チームカラーの赤と区別できるよう、配信中はバッジでも示す（AC-5） */

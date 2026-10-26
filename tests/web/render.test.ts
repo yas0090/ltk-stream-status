@@ -21,7 +21,7 @@ const teams: TeamStatus[] = [
             channelUrl: "https://www.youtube.com/channel/UCx",
             state: "live",
             streams: [
-              { title: "<b>ソロ</b>", url: "https://www.youtube.com/watch?v=1", ltk: false },
+              { title: "<b>ソロ</b>", url: "https://www.youtube.com/watch?v=1", ltk: false, thumbnailUrl: "https://thumb/1.jpg" },
               { title: "LTK スクリム", url: "https://www.youtube.com/watch?v=2", ltk: true },
             ],
           },
@@ -97,10 +97,30 @@ describe("renderTeams", () => {
     expect(card(root, "配信していない人").dataset.live).toBe("false");
   });
 
-  it("どの選手カードも同じ3行構成になる", () => {
+  it("どの選手カードも、画像枠と3行の同じ構成になる（AC-42）", () => {
     for (const el of render().querySelectorAll(".player-card")) {
-      expect([...el.children].map((c) => c.className)).toEqual(["card-head", "platforms", "stream-line"]);
+      expect([...el.children].map((c) => c.className)).toEqual(["thumb", "card-head", "platforms", "stream-line"]);
     }
+  });
+
+  it("配信中は最初の配信のサムネイルを、配信ページへのリンクで表示する（AC-42）", () => {
+    const link = card(render(), "配信中の人").querySelector<HTMLAnchorElement>(".thumb-link")!;
+    expect(link.getAttribute("href")).toBe("https://www.youtube.com/watch?v=1");
+    expect(link.querySelector("img")?.getAttribute("src")).toBe("https://thumb/1.jpg");
+  });
+
+  it("配信していないときは、アイコン画像と OFFLINE を表示する（AC-42）", () => {
+    const thumb = card(render(), "配信していない人").querySelector(".thumb")!;
+    expect(thumb.querySelector(".thumb-img")).toBeNull();
+    expect(thumb.querySelector(".avatar")).not.toBeNull();
+    expect(thumb.querySelector(".thumb-label")?.textContent).toBe("OFFLINE");
+  });
+
+  it("サムネイルを読み込めなければ、アイコン画像と LIVE に切り替える（AC-42）", () => {
+    const thumb = card(render(), "配信中の人").querySelector(".thumb")!;
+    thumb.querySelector("img")!.dispatchEvent(new Event("error"));
+    expect(thumb.querySelector(".thumb-img")).toBeNull();
+    expect(thumb.querySelector(".thumb-label")?.textContent).toBe("LIVE");
   });
 
   it("チャンネルごとにプラットフォームアイコンがあり、配信中は配信ページ、それ以外はチャンネルページへリンクする（AC-6, AC-7）", () => {
@@ -143,14 +163,14 @@ describe("renderTeams", () => {
 
   it("アイコン画像があれば表示し、なければ頭文字を表示する（AC-27）", () => {
     const root = render();
-    expect(card(root, "配信中の人").querySelector<HTMLImageElement>("img.avatar")?.getAttribute("src")).toBe(
+    expect(card(root, "配信中の人").querySelector<HTMLImageElement>(".card-head img.avatar")?.getAttribute("src")).toBe(
       "https://img/live.png",
     );
-    expect(card(root, "配信していない人").querySelector(".avatar--fallback")?.textContent).toBe("配");
+    expect(card(root, "配信していない人").querySelector(".card-head .avatar--fallback")?.textContent).toBe("配");
   });
 
   it("アイコン画像を読み込めなければ頭文字に切り替える（AC-27）", () => {
-    const img = card(render(), "取得失敗の人").querySelector<HTMLImageElement>("img.avatar")!;
+    const img = card(render(), "取得失敗の人").querySelector<HTMLImageElement>(".card-head img.avatar")!;
     const parent = img.parentElement!;
     img.dispatchEvent(new Event("error"));
     expect(parent.querySelector(".avatar--fallback")?.textContent).toBe("取");

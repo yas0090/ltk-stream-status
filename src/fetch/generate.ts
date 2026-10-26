@@ -1,16 +1,32 @@
 import { isLtk } from "../shared/ltk";
 import type { ChannelInput, KeywordsFile, TeamsFile } from "../shared/schema";
 import type { ChannelStatus, SiteData } from "../shared/types";
+import { avatarsDue, planYouTube, type Budget, type YouTubePlan } from "./budget";
+import { initialState, withCurrentQuotaDay, type FetchState } from "./state";
 import { twitchChannelUrl } from "./twitch";
 import { FAILED, type ChannelResult } from "./types";
-import { youtubeChannelUrl } from "./youtube";
+import { youtubeChannelUrl, type YouTubeRequest, type YouTubeResult } from "./youtube";
 
 export type Fetchers = {
   twitch: (logins: string[]) => Promise<Map<string, ChannelResult>>;
-  youtube: (channelIds: string[]) => Promise<Map<string, ChannelResult>>;
+  youtube: (request: YouTubeRequest) => Promise<YouTubeResult>;
   // アイコン画像（AC-27）。失敗しても配信状態には影響させない
   twitchAvatars?: (logins: string[]) => Promise<Map<string, string>>;
   youtubeAvatars?: (channelIds: string[]) => Promise<Map<string, string>>;
+  // この回の YouTube API の使用量と、クォータ超過の応答を受けたか（AC-43）
+  youtubeUsage?: () => { used: number; exceeded: boolean };
+};
+
+export type GenerateOptions = {
+  now?: Date;
+  previousState?: FetchState;
+  budget?: Budget;
+};
+
+export type GenerateResult = {
+  siteData: SiteData;
+  state: FetchState;
+  plan: YouTubePlan;
 };
 
 const fetchAvatars = async (fetcher: ((ids: string[]) => Promise<Map<string, string>>) | undefined, ids: string[]) => {
@@ -25,28 +41,59 @@ const fetchAvatars = async (fetcher: ((ids: string[]) => Promise<Map<string, str
 
 const allChannels = (teams: TeamsFile) => teams.teams.flatMap((t) => t.players.flatMap((p) => p.channels));
 
+const channelKey = (c: ChannelInput) =>
+  c.platform === "twitch" ? `twitch:${c.login.toLowerCase()}` : `youtube:${c.channelId}`;
+
+// 予算の指定がなければ、いつでも確認・取り直しをする
+const ALWAYS: YouTubePlan = { discover: true, fallback: true, reason: "予算の指定なし" };
+
+// データファイルを検証済みの前提で、配信状態を取得して site-data.json と state.json の中身を作る
 export async function generateSiteData(
   teams: TeamsFile,
   keywords: KeywordsFile,
   fetchers: Fetchers,
-  now: Date = new Date(),
-): Promise<SiteData> {
+  { now = new Date(), previousState, budget }: GenerateOptions = {},
+): Promise<GenerateResult> {
   const channels = allChannels(teams);
   const twitchLogins = channels.flatMap((c) => (c.platform === "twitch" ? [c.login] : []));
   const youtubeIds = channels.flatMap((c) => (c.platform === "youtube" ? [c.channelId] : []));
 
+  const previous = withCurrentQuotaDay(previousState ?? initialState(now), now);
+  const plan = budget ? planYouTube(previous, budget, now) : ALWAYS;
+
+  // アイコン画像は 1 時間に 1 回だけ全員分を取り直し、それ以外は前回の URL を使う。新しく加わったチャンネルだけは取りにいく（節約 B）
+  const due = avatarsDue(previous, now);
+  const needsAvatar = (c: ChannelInput) => due || previous.avatars[channelKey(c)] === undefined;
+  const avatarTwitch = channels.flatMap((c) => (c.platform === "twitch" && needsAvatar(c) ? [c.login] : []));
+  const avatarYouTube = channels.flatMap((c) => (c.platform === "youtube" && needsAvatar(c) ? [c.channelId] : []));
+
+  const emptyYouTube: YouTubeResult = { results: new Map(), live: {}, errors: [], discovered: false, fellBack: false };
   const [twitch, youtube, twitchAvatars, youtubeAvatars] = await Promise.all([
     twitchLogins.length > 0 ? fetchers.twitch(twitchLogins) : new Map<string, ChannelResult>(),
-    youtubeIds.length > 0 ? fetchers.youtube(youtubeIds) : new Map<string, ChannelResult>(),
-    fetchAvatars(fetchers.twitchAvatars, twitchLogins),
-    fetchAvatars(fetchers.youtubeAvatars, youtubeIds),
+    youtubeIds.length > 0
+      ? fetchers.youtube({
+          channelIds: youtubeIds,
+          previousLive: previous.youtubeLive,
+          previousErrors: previous.youtubeErrors,
+          plan,
+        })
+      : emptyYouTube,
+    fetchAvatars(fetchers.twitchAvatars, avatarTwitch),
+    fetchAvatars(fetchers.youtubeAvatars, avatarYouTube),
   ]);
 
+  // 今のデータにあるチャンネルだけを残し、取得できたものは新しい URL で上書きする
+  const avatars: Record<string, string> = {};
+  for (const c of channels) {
+    const key = channelKey(c);
+    const fresh = c.platform === "twitch" ? twitchAvatars.get(c.login.toLowerCase()) : youtubeAvatars.get(c.channelId);
+    const url = fresh ?? previous.avatars[key];
+    if (url) avatars[key] = url;
+  }
+
   // データファイルに書いた順で、最初に取得できたアイコン画像を使う
-  const avatarOf = (channels: readonly ChannelInput[]) =>
-    channels
-      .map((c) => (c.platform === "twitch" ? twitchAvatars.get(c.login.toLowerCase()) : youtubeAvatars.get(c.channelId)))
-      .find((url) => url !== undefined);
+  const avatarOf = (playerChannels: readonly ChannelInput[]) =>
+    playerChannels.map((c) => avatars[channelKey(c)]).find((url) => url !== undefined);
 
   const withAvatar = (avatarUrl: string | undefined) => (avatarUrl ? { avatarUrl } : {});
 
@@ -54,17 +101,23 @@ export async function generateSiteData(
     const [channelUrl, result] =
       channel.platform === "twitch"
         ? [twitchChannelUrl(channel.login), twitch.get(channel.login.toLowerCase())]
-        : [youtubeChannelUrl(channel.channelId), youtube.get(channel.channelId)];
+        : [youtubeChannelUrl(channel.channelId), youtube.results.get(channel.channelId)];
     const { state, streams } = result ?? FAILED;
     return {
       platform: channel.platform,
       channelUrl,
       state,
-      streams: streams.map((s) => ({ ...s, ltk: isLtk(s.title, keywords.ltkKeywords) })),
+      // videoId は state.json だけに引き継ぎ、site-data.json には出さない
+      streams: streams.map(({ title, url, thumbnailUrl }) => ({
+        title,
+        url,
+        ltk: isLtk(title, keywords.ltkKeywords),
+        ...(thumbnailUrl ? { thumbnailUrl } : {}),
+      })),
     };
   };
 
-  return {
+  const siteData: SiteData = {
     generatedAt: now.toISOString(),
     teams: teams.teams.map((team) => ({
       id: team.id,
@@ -79,6 +132,29 @@ export async function generateSiteData(
       })),
     })),
   };
+
+  const usage = fetchers.youtubeUsage?.() ?? { used: 0, exceeded: false };
+  const nowIso = now.toISOString();
+  const state: FetchState = {
+    version: 1,
+    quota: {
+      day: previous.quota.day,
+      used: previous.quota.used + usage.used,
+      exceeded: previous.quota.exceeded || usage.exceeded,
+    },
+    lastDiscoveryAt: youtube.discovered ? nowIso : previous.lastDiscoveryAt,
+    lastFallbackAt: youtube.fellBack ? nowIso : previous.lastFallbackAt,
+    avatarsFetchedAt: due ? nowIso : previous.avatarsFetchedAt,
+    youtubeLive: youtube.live,
+    youtubeErrors: youtube.errors,
+    avatars,
+  };
+  // 値が undefined のキーは出力しない
+  for (const key of ["lastDiscoveryAt", "lastFallbackAt", "avatarsFetchedAt"] as const) {
+    if (state[key] === undefined) delete state[key];
+  }
+
+  return { siteData, state, plan };
 }
 
 export const requiredSecrets = (teams: TeamsFile) => {

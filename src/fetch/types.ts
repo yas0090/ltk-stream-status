@@ -2,8 +2,9 @@ import type { ChannelState } from "../shared/types";
 
 export type FetchFn = typeof fetch;
 
-// LTK 判定前の、プラットフォームから取得したままの配信情報
-export type RawStream = { title: string; url: string };
+// LTK 判定前の、プラットフォームから取得したままの配信情報。
+// videoId は YouTube の終了チェックのために state.json へ引き継ぐ（site-data.json には出さない）
+export type RawStream = { title: string; url: string; thumbnailUrl?: string; videoId?: string };
 
 export type ChannelResult = { state: ChannelState; streams: RawStream[] };
 

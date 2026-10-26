@@ -2,7 +2,7 @@ import { chunk, FAILED, OFFLINE, type ChannelResult, type FetchFn } from "./type
 
 export type TwitchCredentials = { clientId: string; clientSecret: string };
 
-type StreamsResponse = { data: { user_login: string; title: string; type: string }[] };
+type StreamsResponse = { data: { user_login: string; title: string; type: string; thumbnail_url?: string }[] };
 type UsersResponse = { data: { login: string; profile_image_url: string }[] };
 
 // 1 回の実行の中で、配信状態とアイコン画像の取得に同じトークンを使い回す
@@ -11,6 +11,11 @@ export type TwitchTokenProvider = () => Promise<string>;
 const BATCH_SIZE = 100;
 
 export const twitchChannelUrl = (login: string) => `https://www.twitch.tv/${login.toLowerCase()}`;
+
+// サムネイルの URL はテンプレートなので大きさを入れる。同じ URL のまま中身が更新されるため、取得時刻を付けて
+// ブラウザに古い画像が残らないようにする（AC-42）
+export const twitchThumbnailUrl = (template: string | undefined, now: Date) =>
+  template ? `${template.replace("{width}", "440").replace("{height}", "248")}?t=${now.getTime()}` : undefined;
 
 // Client Credentials Flow。トークンはログに出さない
 async function getAppToken({ clientId, clientSecret }: TwitchCredentials, fetchFn: FetchFn): Promise<string> {
@@ -45,6 +50,7 @@ export async function fetchTwitchStatuses(
   credentials: TwitchCredentials,
   fetchFn: FetchFn = fetch,
   getToken: TwitchTokenProvider = createTwitchTokenProvider(credentials, fetchFn),
+  now: Date = new Date(),
 ): Promise<Map<string, ChannelResult>> {
   const normalized = [...new Set(logins.map((login) => login.toLowerCase()))];
   const results = new Map<string, ChannelResult>();
@@ -66,7 +72,12 @@ export async function fetchTwitchStatuses(
       for (const stream of streams) {
         if (stream.type !== "live") continue;
         const login = stream.user_login.toLowerCase();
-        results.set(login, { state: "live", streams: [{ title: stream.title, url: twitchChannelUrl(login) }] });
+        results.set(login, {
+          state: "live",
+          streams: [
+            { title: stream.title, url: twitchChannelUrl(login), thumbnailUrl: twitchThumbnailUrl(stream.thumbnail_url, now) },
+          ],
+        });
       }
     } catch (error) {
       console.warn(String(error));

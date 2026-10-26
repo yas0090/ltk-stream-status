@@ -1,0 +1,13 @@
+# 起動用の Worker（AC-21）。デプロイ: npx wrangler deploy --config cron/wrangler.toml
+# GitHub のトークンは Secret に置く: npx wrangler secret put GITHUB_TOKEN --config cron/wrangler.toml
+name = "ltk-stream-status-cron"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[vars]
+GITHUB_REPOSITORY = "yas0090/ltk-stream-status"
+WORKFLOW_FILE = "deploy.yml"
+GITHUB_REF = "main"

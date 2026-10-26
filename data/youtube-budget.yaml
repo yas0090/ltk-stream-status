@@ -1,0 +1,33 @@
+# YouTube Data API の 1 日（太平洋時間）の使用量に応じて、新しい配信の確認の間隔を変える
+# - Twitch と、配信中の YouTube の終了チェックは、この設定に関係なく毎回（5 分ごと）行う
+# - 使用量は取得処理が数えた値。Google Cloud Console の実際の使用量と見比べて調整する
+# - 誤りがあると更新処理がエラーで止まり、サイトは前回の状態のまま残る
+
+# 使用量がこの値に達したら、新しい配信の確認を止める（実際の上限 10,000 より少なめにする）
+limit: 9000
+
+# 配信が活発な時間帯（日本時間の時。start 時から end 時の前まで）。この時間帯は使用量に関係なく peakDiscoveryMinutes ごと
+peakHours:
+  start: 16
+  end: 3
+peakDiscoveryMinutes: 5
+
+# それ以外の時間帯の間隔。使用量が upTo 未満の最初の段階を使う
+#   discoveryMinutes: 新しい配信の確認の間隔（分）
+#   fallbackMinutes:  RSS に失敗したチャンネルを API で取り直す間隔（分）。null なら取り直さない
+tiers:
+  - upTo: 3000
+    discoveryMinutes: 5
+    fallbackMinutes: 5
+  - upTo: 5000
+    discoveryMinutes: 10
+    fallbackMinutes: 10
+  - upTo: 7000
+    discoveryMinutes: 15
+    fallbackMinutes: 15
+  - upTo: 8000
+    discoveryMinutes: 30
+    fallbackMinutes: 30
+  - upTo: 9000
+    discoveryMinutes: 60
+    fallbackMinutes: null
