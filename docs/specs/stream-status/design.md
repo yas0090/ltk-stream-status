@@ -52,7 +52,7 @@ Cloudflare Workers（cron: */5 * * * *）
 ```
 
 - **取得処理は GitHub Actions に残す**: Cloudflare Workers の無料プランは、1 回の実行で外部へのリクエストが 50 件まで、CPU 時間が 10ms までに制限される。今回の取得は約 70 件のリクエストがあり、1 回では収まらない。分割すると仕組みが複雑になるため、Workers は起動だけに使う
-- **起動用の Worker**（`cron/` ディレクトリ）: `scheduled` ハンドラーで GitHub API の `workflow_dispatch` を 1 回呼ぶだけの小さな Worker。GitHub のトークンは Worker の Secret（`GITHUB_TOKEN`）に置く。トークンは fine-grained で、このリポジトリの Actions（読み書き）だけに権限を絞る。呼び出しに失敗したら Worker のログに残す
+- **起動用の Worker**（`cron/` ディレクトリ）: `scheduled` ハンドラーで GitHub API の `workflow_dispatch` を 1 回呼ぶだけの小さな Worker。GitHub のトークンは Worker の Secret（`GITHUB_TOKEN`）に置く。トークンは fine-grained で、このリポジトリの Actions（読み書き）だけに権限を絞る。呼び出しに失敗したら Worker のログに残す。Cron で起動するだけなので、`workers.dev` の公開 URL は作らない（`workers_dev = false`）
 - **GitHub Actions の schedule**: Worker が止まったときの予備として、1 時間ごと（`17 * * * *`）に減らして残す。実行が重なっても `concurrency` で 1 つずつ処理される
 - **公開**: ビルドした `dist/` を `wrangler pages deploy` で Cloudflare Pages にアップロードする。Cloudflare の API トークン（Pages の編集だけ）とアカウント ID を GitHub の Secrets（`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`）に置く。`wrangler` は devDependencies に入れてバージョンを固定する。Pages のプロジェクト名は `ltk4-livenow-unofficial` で、公開 URL は `https://ltk4-livenow-unofficial.pages.dev/`（URL だけで非公式と分かるようにする。2026-10-26 決定）。プロジェクトは初回だけ手元の wrangler で作り、ワークフローはアップロードだけを行う。wrangler 4.152 では Pages が Workers に統合され、`pages project create` は Workers 用の自動設定に置き換わるため、従来の Pages で作るように `--force` を付けた（一度作れば、以降の `pages deploy` は Pages に直接アップロードされる）
 - **GitHub Pages の停止**: Cloudflare Pages で公開できたことを確認してから、リポジトリの設定で GitHub Pages を無効にする。ワークフローから Pages へのデプロイ（`upload-pages-artifact`, `deploy-pages`）も削除する

@@ -141,14 +141,16 @@
 - [x] 9-4. 使用量を数え、予算に応じて新しい配信の確認の間隔を決める（AC-43）
   - `data/youtube-budget.yaml` とその検証、太平洋時間の日付での集計、時間帯と使用量からの判定、`quotaExceeded` で止める
   - テスト: 各段階の境目、日付の切り替え、夜は常に 5 分、`quotaExceeded`
-- [ ] 9-5. Cloudflare の準備（ユーザーが行う。手順を案内する）
+- [x] 9-5. Cloudflare の準備（ユーザーが行う。手順を案内する）
   - アカウント作成、Pages プロジェクトの作成、API トークンとアカウント ID を GitHub の Secrets に登録
   - GitHub の fine-grained トークンを発行
-- [ ] 9-6. ワークフローを Cloudflare Pages へのデプロイに切り替える（AC-41）
+  - 2026-10-26: Pages プロジェクト `ltk4-livenow-unofficial` を作成し、Secrets と fine-grained トークンを登録した
+- [x] 9-6. ワークフローを Cloudflare Pages へのデプロイに切り替える（AC-41）
   - `wrangler pages deploy`、`PUBLIC_SITE_URL` の設定、schedule を 1 時間ごとに変更、GitHub Pages へのデプロイ手順を削除
-- [ ] 9-7. 起動用の Worker を作る（AC-21）（コードとテストは 2026-10-26 に作成済み。デプロイが残り）
+- [x] 9-7. 起動用の Worker を作る（AC-21）（コードとテストは 2026-10-26 に作成済み。デプロイが残り）
   - `cron/` に Worker と設定（`*/5 * * * *`）を置く。テスト: GitHub API を正しい URL・ヘッダーで呼ぶこと、失敗をログに残すこと
   - Worker をデプロイし、Secret にトークンを登録する（ユーザーと一緒に行う）
+  - 2026-10-26: デプロイ後、Cron が動き始めるまで約 12 分かかった。12:25 以降は 5 分ごとに起動され、`state.json` の使用量も引き継がれている
 - [ ] 9-8. 切り替えを確認し、GitHub Pages を停止する（AC-41）
   - Cloudflare Pages の URL で表示・更新を確認してから、GitHub Pages を無効にする
   - Worker から 5 分ごとに起動されていること、`state.json` の使用量と Google Cloud Console の使用量が大きくずれていないことを確かめる

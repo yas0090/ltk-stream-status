@@ -3,6 +3,8 @@
 name = "ltk-stream-status-cron"
 main = "src/index.ts"
 compatibility_date = "2026-10-01"
+# Cron で起動するだけなので、workers.dev の公開 URL は作らない
+workers_dev = false
 
 [triggers]
 crons = ["*/5 * * * *"]
