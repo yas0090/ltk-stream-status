@@ -1,25 +1,24 @@
 name: deploy
 
 on:
-  # 配信状態の定期更新（AC-21）。GitHub 側の混雑で遅れることがある
+  # 5 分ごとの起動は Cloudflare Workers の Cron から workflow_dispatch で行う（AC-21）。
+  # schedule は GitHub 側で間引かれるので、Worker が止まったときの予備として 1 時間ごとに残す
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "17 * * * *"
   push:
     branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 # 実行中のデプロイは止めず、待機中の古い実行は新しい実行に置き換える
 concurrency:
-  group: pages
+  group: deploy
   cancel-in-progress: false
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -52,7 +51,7 @@ jobs:
       # 配信されるファイルに秘密情報が含まれていないことを確かめる（AC-26）
       - name: Check secrets are not in dist
         run: |
-          for name in TWITCH_CLIENT_ID TWITCH_CLIENT_SECRET YOUTUBE_API_KEY; do
+          for name in TWITCH_CLIENT_ID TWITCH_CLIENT_SECRET YOUTUBE_API_KEY CLOUDFLARE_API_TOKEN; do
             value="${!name}"
             if [ -n "$value" ] && grep -rqF -- "$value" dist; then
               echo "::error::dist に $name の値が含まれています"
@@ -63,17 +62,11 @@ jobs:
           TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
           TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
-      - uses: actions/upload-pages-artifact@v5
-        with:
-          path: dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v5
+      # Cloudflare Pages に公開する（AC-41）。プロジェクトは事前に作っておく
+      - name: Deploy to Cloudflare Pages
+        run: npx wrangler pages deploy dist --project-name=ltk4-livenow-unofficial --branch=main --commit-dirty=true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
