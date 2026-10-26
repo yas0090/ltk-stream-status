@@ -43,8 +43,29 @@ export type TeamStatus = {
   players: PlayerStatus[];
 };
 
+// 本戦の対戦カード。blue / red はチーム id（AC-45）
+export type Game = { blue: string; red: string; tiers: Tier[] };
+
+export type Match = {
+  stage: string;
+  day: string;
+  // ISO 8601
+  startAt: string;
+  endAt: string;
+  games: Game[];
+};
+
+export type Schedule = {
+  // 開始時刻の順
+  matches: Match[];
+  // 公式チャンネル。取得しない時間帯は offline（AC-47）
+  official: { twitch: ChannelStatus; youtube: ChannelStatus };
+};
+
 // site-data.json の形式
 export type SiteData = {
   generatedAt: string;
   teams: TeamStatus[];
+  // 本戦の案内（AC-45〜49）。schedule.yaml がなければ省略
+  schedule?: Schedule;
 };

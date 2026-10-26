@@ -1,9 +1,11 @@
 import { buildView, EMPTY_FILTER, type Filter } from "../shared/filter";
 import { pruneHidden } from "../shared/hidden";
+import { pickNotice } from "../shared/schedule";
 import type { SiteData } from "../shared/types";
 import { renderDetailFilter } from "./detail-filter";
 import { h } from "./dom";
 import { renderFilters, setHiddenCount } from "./filters";
+import { renderNotice } from "./notice";
 import { renderStaleWarning, renderTeams, renderUpdatedAt } from "./render";
 import { loadFilter, loadHiddenPlayers, saveFilter, saveHiddenPlayers } from "./storage";
 import { renderThemeToggle } from "./theme";
@@ -50,6 +52,7 @@ export function createApp(root: HTMLElement, { loadData, now = () => new Date() 
 
   const updatedSlot = h("div", { class: "updated-slot" });
   const staleSlot = h("div", { class: "stale-slot" });
+  const noticeSlot = h("div", { class: "notice-slot" });
   const filtersSlot = h("div", { class: "filters-slot" });
   const detailSlot = h("div", { class: "detail-slot" });
   const listSlot = h("main", { class: "list-slot" });
@@ -68,7 +71,7 @@ export function createApp(root: HTMLElement, { loadData, now = () => new Date() 
       ),
       staleSlot,
     ),
-    h("div", { class: "page" }, errorSlot, filtersSlot, listSlot, renderFooter()),
+    h("div", { class: "page" }, errorSlot, noticeSlot, filtersSlot, listSlot, renderFooter()),
     detailSlot,
   );
 
@@ -79,6 +82,9 @@ export function createApp(root: HTMLElement, { loadData, now = () => new Date() 
     if (!data) return;
     updatedSlot.replaceChildren(renderUpdatedAt(data.generatedAt));
     staleSlot.replaceChildren(renderStaleWarning(data.generatedAt, now()) ?? "");
+    // 本戦の案内は端末の現在時刻で切り替える（AC-49）
+    const notice = pickNotice(data.schedule, now());
+    noticeSlot.replaceChildren(notice && data.schedule ? renderNotice(notice, data.schedule, data.teams, now()) : "");
   };
 
   const renderList = () => {

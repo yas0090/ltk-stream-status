@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { parseArgs } from "node:util";
 import { parse as parseYaml } from "yaml";
-import { parseKeywordsData, parseTeamsData } from "../shared/schema";
+import { parseKeywordsData, parseScheduleData, parseTeamsData } from "../shared/schema";
 import { parseBudget } from "./budget";
 import { generateSiteData, requiredSecrets } from "./generate";
 import { loadState } from "./state";
@@ -26,6 +26,10 @@ async function main() {
   const teams = parseTeamsData(await readYaml("teams.yaml"));
   const keywords = parseKeywordsData(await readYaml("keywords.yaml"));
   const budget = parseBudget(await readYaml("youtube-budget.yaml"));
+  // 本戦の日程（AC-45）。ファイルがなければ案内を出さない
+  const schedule = existsSync(join(values.data, "schedule.yaml"))
+    ? parseScheduleData(await readYaml("schedule.yaml"), teams.teams.map((t) => t.id))
+    : undefined;
 
   const missing = requiredSecrets(teams).filter((name) => !process.env[name]);
   if (missing.length > 0) throw new Error(`環境変数が設定されていません: ${missing.join(", ")}`);
@@ -47,7 +51,7 @@ async function main() {
       youtubeAvatars: (channelIds) => fetchYouTubeAvatars(channelIds, youtube),
       youtubeUsage: () => ({ used: youtube.used, exceeded: youtube.exceeded }),
     },
-    { now, previousState, budget },
+    { now, previousState, budget, schedule },
   );
 
   await mkdir(dirname(values.out), { recursive: true });

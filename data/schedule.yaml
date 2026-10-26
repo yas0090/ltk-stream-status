@@ -1,0 +1,102 @@
+# 本戦の日程（公式配信がある日）。ページ先頭の案内に使う
+# - 日付と時刻は日本時間。終了が日をまたぐ場合は 24:00 以降で書く（例: 25:30）
+# - 本戦の日の 16:00 から終了予定時刻まで「本日の本戦」を案内し、それ以外は次の本戦を1行で表示する
+# - 本戦の日だけ、公式チャンネルの配信状態も取得する（終了予定時刻の3時間後まで）
+# - 誤りがあると更新処理がエラーで止まり、サイトは前回の状態のまま残る
+#
+# 項目
+#   official  公式チャンネル。twitch はログイン名、youtube は UC で始まる24文字のチャンネル ID
+#   date      日付（YYYY-MM-DD）。同じ日付は1つだけ
+#   stage     ステージ名（例: Regular Stage, Masters Cup）
+#   day       日の名前（例: DAY 4）
+#   start     配信の開始時刻（HH:MM）
+#   end       配信の終了予定時刻（HH:MM）。公表されていないので仮の値
+#   games     対戦カード。blue / red は teams.yaml のチーム id、tiers はその試合の階級
+#
+# 出典: LTK 公式の告知画像「Regular Stage」「Masters Cup」（2026-10-26 確認）
+#       開始時刻は Regular Stage が 18:00、Masters Cup が 17:00 の予定。終了予定時刻は仮に 23:00 とする
+official:
+  twitch: lolthek4sen
+  youtube: UC4w01_HiIMtZeFZocgqB8rw
+
+matches:
+  - date: 2026-10-15
+    stage: Regular Stage
+    day: DAY 1
+    start: "18:00"
+    end: "23:00"
+    games:
+      - { blue: camellia-crown, red: dahlia-diadem, tiers: [Next, Core] }
+      - { blue: iris-tiara, red: laurel-regalia, tiers: [Next, Core] }
+
+  - date: 2026-10-19
+    stage: Regular Stage
+    day: DAY 2
+    start: "18:00"
+    end: "23:00"
+    games:
+      - { blue: camellia-crown, red: laurel-regalia, tiers: [Next, Core] }
+      - { blue: dahlia-diadem, red: iris-tiara, tiers: [Next, Core] }
+
+  - date: 2026-10-20
+    stage: Masters Cup
+    day: DAY 1
+    start: "17:00"
+    end: "23:00"
+    games:
+      - { blue: dahlia-diadem, red: camellia-crown, tiers: [Masters] }
+      - { blue: iris-tiara, red: laurel-regalia, tiers: [Masters] }
+
+  - date: 2026-10-23
+    stage: Regular Stage
+    day: DAY 3
+    start: "18:00"
+    end: "23:00"
+    games:
+      - { blue: laurel-regalia, red: dahlia-diadem, tiers: [Next, Core] }
+      - { blue: iris-tiara, red: camellia-crown, tiers: [Next, Core] }
+
+  - date: 2026-10-27
+    stage: Regular Stage
+    day: DAY 4
+    start: "18:00"
+    end: "23:00"
+    games:
+      - { blue: laurel-regalia, red: iris-tiara, tiers: [Next, Core] }
+      - { blue: dahlia-diadem, red: camellia-crown, tiers: [Next, Core] }
+
+  - date: 2026-10-28
+    stage: Masters Cup
+    day: DAY 2
+    start: "17:00"
+    end: "23:00"
+    games:
+      - { blue: dahlia-diadem, red: iris-tiara, tiers: [Masters] }
+      - { blue: camellia-crown, red: laurel-regalia, tiers: [Masters] }
+
+  - date: 2026-11-02
+    stage: Regular Stage
+    day: DAY 5
+    start: "18:00"
+    end: "23:00"
+    games:
+      - { blue: iris-tiara, red: dahlia-diadem, tiers: [Next, Core] }
+      - { blue: laurel-regalia, red: camellia-crown, tiers: [Next, Core] }
+
+  - date: 2026-11-06
+    stage: Regular Stage
+    day: DAY 6
+    start: "18:00"
+    end: "23:00"
+    games:
+      - { blue: camellia-crown, red: iris-tiara, tiers: [Next, Core] }
+      - { blue: dahlia-diadem, red: laurel-regalia, tiers: [Next, Core] }
+
+  - date: 2026-11-09
+    stage: Masters Cup
+    day: DAY 3
+    start: "17:00"
+    end: "23:00"
+    games:
+      - { blue: dahlia-diadem, red: laurel-regalia, tiers: [Masters] }
+      - { blue: camellia-crown, red: iris-tiara, tiers: [Masters] }

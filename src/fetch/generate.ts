@@ -1,6 +1,7 @@
 import { isLtk } from "../shared/ltk";
-import type { ChannelInput, KeywordsFile, TeamsFile } from "../shared/schema";
-import type { ChannelStatus, SiteData } from "../shared/types";
+import { isOfficialWindow } from "../shared/schedule";
+import { toMatches, type ChannelInput, type KeywordsFile, type ScheduleFile, type TeamsFile } from "../shared/schema";
+import type { ChannelStatus, Schedule, SiteData } from "../shared/types";
 import { avatarsDue, planYouTube, type Budget, type YouTubePlan } from "./budget";
 import { initialState, withCurrentQuotaDay, type FetchState } from "./state";
 import { twitchChannelUrl } from "./twitch";
@@ -21,6 +22,8 @@ export type GenerateOptions = {
   now?: Date;
   previousState?: FetchState;
   budget?: Budget;
+  // 本戦の日程（AC-45）。なければ site-data.json に schedule を出さない
+  schedule?: ScheduleFile;
 };
 
 export type GenerateResult = {
@@ -52,11 +55,21 @@ export async function generateSiteData(
   teams: TeamsFile,
   keywords: KeywordsFile,
   fetchers: Fetchers,
-  { now = new Date(), previousState, budget }: GenerateOptions = {},
+  { now = new Date(), previousState, budget, schedule }: GenerateOptions = {},
 ): Promise<GenerateResult> {
   const channels = allChannels(teams);
-  const twitchLogins = channels.flatMap((c) => (c.platform === "twitch" ? [c.login] : []));
-  const youtubeIds = channels.flatMap((c) => (c.platform === "youtube" ? [c.channelId] : []));
+  // 公式チャンネルは本戦の日だけ、選手と同じ取得に加える（AC-47）
+  const matches = schedule ? toMatches(schedule) : [];
+  const official: readonly ChannelInput[] =
+    schedule && isOfficialWindow(matches, now)
+      ? [
+          { platform: "twitch", login: schedule.official.twitch },
+          { platform: "youtube", channelId: schedule.official.youtube },
+        ]
+      : [];
+  const targets = [...channels, ...official];
+  const twitchLogins = targets.flatMap((c) => (c.platform === "twitch" ? [c.login] : []));
+  const youtubeIds = targets.flatMap((c) => (c.platform === "youtube" ? [c.channelId] : []));
 
   const previous = withCurrentQuotaDay(previousState ?? initialState(now), now);
   const plan = budget ? planYouTube(previous, budget, now) : ALWAYS;
@@ -97,7 +110,7 @@ export async function generateSiteData(
 
   const withAvatar = (avatarUrl: string | undefined) => (avatarUrl ? { avatarUrl } : {});
 
-  const toStatus = (channel: ChannelInput): ChannelStatus => {
+  const toStatus = (channel: ChannelInput, ltkKeywords = keywords.ltkKeywords): ChannelStatus => {
     const [channelUrl, result] =
       channel.platform === "twitch"
         ? [twitchChannelUrl(channel.login), twitch.get(channel.login.toLowerCase())]
@@ -111,7 +124,7 @@ export async function generateSiteData(
       streams: streams.map(({ title, url, thumbnailUrl }) => ({
         title,
         url,
-        ltk: isLtk(title, keywords.ltkKeywords),
+        ltk: isLtk(title, ltkKeywords),
         ...(thumbnailUrl ? { thumbnailUrl } : {}),
       })),
     };
@@ -128,10 +141,31 @@ export async function generateSiteData(
         tier: player.tier,
         role: player.role,
         ...withAvatar(avatarOf(player.channels)),
-        channels: player.channels.map(toStatus),
+        channels: player.channels.map((c) => toStatus(c)),
       })),
     })),
   };
+
+  if (schedule) {
+    // 公式チャンネルは LTK タグを判定しない。取得しない時間帯は配信していない扱いにする
+    const officialStatus = (channel: ChannelInput): ChannelStatus =>
+      official.length > 0
+        ? toStatus(channel, [])
+        : {
+            platform: channel.platform,
+            channelUrl: channel.platform === "twitch" ? twitchChannelUrl(channel.login) : youtubeChannelUrl(channel.channelId),
+            state: "offline",
+            streams: [],
+          };
+    const result: Schedule = {
+      matches,
+      official: {
+        twitch: officialStatus({ platform: "twitch", login: schedule.official.twitch }),
+        youtube: officialStatus({ platform: "youtube", channelId: schedule.official.youtube }),
+      },
+    };
+    siteData.schedule = result;
+  }
 
   const usage = fetchers.youtubeUsage?.() ?? { used: 0, exceeded: false };
   const nowIso = now.toISOString();

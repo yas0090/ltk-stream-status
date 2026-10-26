@@ -182,6 +182,43 @@ describe("簡易絞り込みの保存（AC-44）", () => {
   });
 });
 
+describe("本戦の案内（AC-46, AC-48, AC-49）", () => {
+  const withSchedule = (): SiteData => ({
+    ...siteData(T0),
+    schedule: {
+      matches: [
+        {
+          stage: "Regular Stage",
+          day: "DAY 4",
+          startAt: "2026-10-27T09:00:00.000Z",
+          endAt: "2026-10-27T14:00:00.000Z",
+          games: [{ blue: "a", red: "a", tiers: ["Core"] }],
+        },
+      ],
+      official: {
+        twitch: { platform: "twitch", channelUrl: "https://www.twitch.tv/lolthek4sen", state: "offline", streams: [] },
+        youtube: { platform: "youtube", channelUrl: "https://www.youtube.com/channel/x", state: "offline", streams: [] },
+      },
+    },
+  });
+
+  it("絞り込みの上に出し、データの更新を待たずに端末の時刻で当日の案内に切り替える", async () => {
+    vi.setSystemTime(new Date("2026-10-27T15:59:00+09:00"));
+    const root = await start(async () => withSchedule());
+    const notice = () => root.querySelector(".notice-slot .match-notice");
+    expect(notice()?.classList.contains("match-notice--next")).toBe(true);
+    expect(root.querySelector(".notice-slot + .filters-slot")).not.toBeNull();
+
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(notice()?.classList.contains("match-notice--today")).toBe(true);
+  });
+
+  it("日程がなければ何も出さない", async () => {
+    const root = await start(async () => siteData(T0));
+    expect(root.querySelector(".notice-slot")?.childElementCount).toBe(0);
+  });
+});
+
 describe("fetchSiteData", () => {
   it("キャッシュを避けるためタイムスタンプ付きで読み込む", async () => {
     const fetchMock = vi.fn(async () => new Response(JSON.stringify(siteData(T0))));

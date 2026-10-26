@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { ROLES, TIERS } from "./types";
+import { jstAt } from "./schedule";
+import { ROLES, TIERS, type Match } from "./types";
 
 const twitchChannelSchema = z.strictObject({
   platform: z.literal("twitch"),
@@ -74,11 +75,39 @@ const keywordsFileSchema = z.strictObject({
   ltkKeywords: z.array(z.string().min(1)).min(1, "キーワードを1つ以上登録してください"),
 });
 
+// 本戦の日程（AC-45）。日付と時刻は日本時間で書く。終了が日をまたぐ場合は 24:00 以降で書く
+const timeSchema = z.string().regex(/^([01][0-9]|2[0-9]|3[0-9]|4[0-7]):[0-5][0-9]$/, "時刻は HH:MM 形式で書いてください（00:00〜47:59）");
+
+const gameSchema = z.strictObject({
+  blue: z.string().min(1),
+  red: z.string().min(1),
+  tiers: z.array(z.enum(TIERS)).min(1, "階級を1つ以上書いてください"),
+});
+
+const matchSchema = z.strictObject({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "日付は YYYY-MM-DD 形式で書いてください"),
+  stage: z.string().min(1),
+  day: z.string().min(1),
+  start: timeSchema,
+  end: timeSchema,
+  games: z.array(gameSchema).min(1, "対戦カードを1つ以上書いてください"),
+});
+
+const scheduleFileSchema = z.strictObject({
+  official: z.strictObject({
+    twitch: z.string().regex(/^[A-Za-z0-9_]{1,25}$/, "Twitch のログイン名の形式が正しくありません"),
+    youtube: z.string().regex(/^UC[A-Za-z0-9_-]{22}$/, "YouTube のチャンネル ID は UC で始まる24文字です"),
+  }),
+  matches: z.array(matchSchema),
+});
+
+
 export type ChannelInput = z.infer<typeof channelSchema>;
 export type PlayerInput = z.infer<typeof playerSchema>;
 export type TeamInput = z.infer<typeof teamSchema>;
 export type TeamsFile = z.infer<typeof teamsFileSchema>;
 export type KeywordsFile = z.infer<typeof keywordsFileSchema>;
+export type ScheduleFile = z.infer<typeof scheduleFileSchema>;
 
 export class DataValidationError extends Error {
   override name = "DataValidationError";
@@ -95,3 +124,50 @@ export const parseTeamsData = (input: unknown): TeamsFile => parseWith(teamsFile
 
 export const parseKeywordsData = (input: unknown): KeywordsFile =>
   parseWith(keywordsFileSchema, input, "keywords.yaml");
+
+// teams.yaml にあるチーム id だけを対戦カードに使える
+export function parseScheduleData(input: unknown, teamIds: readonly string[]): ScheduleFile {
+  const schema = scheduleFileSchema
+    .superRefine((data, ctx) => {
+      const dates = new Set<string>();
+      data.matches.forEach((match, mi) => {
+        if (Number.isNaN(jstAt(match.date, "00:00").getTime())) {
+          ctx.addIssue({ code: "custom", path: ["matches", mi, "date"], message: `日付「${match.date}」が正しくありません` });
+        }
+        if (dates.has(match.date)) {
+          ctx.addIssue({ code: "custom", path: ["matches", mi, "date"], message: `日付「${match.date}」が重複しています` });
+        }
+        dates.add(match.date);
+        if (match.start >= match.end) {
+          ctx.addIssue({ code: "custom", path: ["matches", mi, "end"], message: "終了予定時刻は開始時刻より後にしてください" });
+        }
+        match.games.forEach((game, gi) => {
+          for (const side of ["blue", "red"] as const) {
+            if (!teamIds.includes(game[side])) {
+              ctx.addIssue({
+                code: "custom",
+                path: ["matches", mi, "games", gi, side],
+                message: `チーム id「${game[side]}」は teams.yaml にありません`,
+              });
+            }
+          }
+          if (game.blue === game.red) {
+            ctx.addIssue({ code: "custom", path: ["matches", mi, "games", gi], message: "同じチーム同士の対戦になっています" });
+          }
+        });
+      });
+    });
+  return parseWith(schema, input, "schedule.yaml");
+}
+
+// 開始時刻の順に並べ、日時を ISO 8601 にする
+export const toMatches = (file: ScheduleFile): Match[] =>
+  file.matches
+    .map((m) => ({
+      stage: m.stage,
+      day: m.day,
+      startAt: jstAt(m.date, m.start).toISOString(),
+      endAt: jstAt(m.date, m.end).toISOString(),
+      games: m.games.map((g) => ({ blue: g.blue, red: g.red, tiers: [...g.tiers] })),
+    }))
+    .sort((a, b) => a.startAt.localeCompare(b.startAt));

@@ -145,6 +145,170 @@ a {
 }
 
 /* 絞り込み: カテゴリごとに1行にし、区切り線で分ける */
+/* 本戦の案内（AC-46, AC-48）。当日は目立つ枠、それ以外は控えめな帯。絞り込みとは間を空けて別のものと分かるようにする */
+.match-notice {
+  margin: 16px 0 28px;
+}
+
+.match-notice--next {
+  display: grid;
+  gap: 6px;
+  padding: 10px 16px;
+  border: 1px solid color-mix(in srgb, var(--ltk-bg) 40%, var(--surface));
+  border-left: 4px solid var(--ltk-bg);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ltk-bg) 14%, var(--surface));
+  font-size: 0.875rem;
+}
+
+.match-notice--next .mn-head {
+  margin: 0;
+  gap: 4px 10px;
+}
+
+.match-notice--next .mn-label {
+  color: var(--ltk-bg);
+}
+
+.match-notice--next time {
+  font-weight: 700;
+}
+
+/* 次回の対戦カードは横に並べ、当日より小さくする */
+.match-notice--next .mn-games {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 20px;
+}
+
+.match-notice--next .mn-game {
+  font-size: 0.8125rem;
+}
+
+.match-notice--next .mn-team {
+  font-weight: 600;
+}
+
+.mn-label {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.match-notice--today {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 2px solid var(--live);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--live) 6%, var(--surface));
+}
+
+.mn-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+}
+
+.match-notice--today .mn-label {
+  color: var(--live);
+}
+
+.mn-name {
+  font-size: 1.125rem;
+}
+
+.mn-status {
+  font-weight: 700;
+}
+
+.mn-status[data-live="true"] {
+  color: var(--live);
+}
+
+.mn-games {
+  display: grid;
+  gap: 4px;
+  list-style: none;
+}
+
+.mn-game {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+  font-size: 0.9375rem;
+}
+
+.mn-team::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--chip-color, var(--text-muted));
+  vertical-align: 1px;
+}
+
+.mn-team {
+  font-weight: 700;
+}
+
+.mn-vs,
+.mn-tiers {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.mn-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mn-link {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.mn-link svg {
+  width: 18px;
+  height: 18px;
+}
+
+.mn-link--twitch svg {
+  color: var(--twitch);
+}
+
+.mn-link--youtube svg {
+  color: var(--youtube);
+}
+
+.mn-link[data-live="true"] {
+  border-color: var(--live);
+}
+
+.mn-live {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--live);
+  color: #ffffff;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
 .filters {
   margin: 16px 0;
   border: 1px solid var(--border);
