@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { EMPTY_FILTER, type Filter } from "../../src/shared/filter";
 import { renderFilters } from "../../src/web/filters";
 
-const setup = () => {
+const setup = (initial?: Filter) => {
   const onChange = vi.fn<(filter: Filter) => void>();
   const form = renderFilters(
     [
@@ -11,6 +11,8 @@ const setup = () => {
       { id: "b", name: "チームB", color: "#D10015" },
     ],
     onChange,
+    undefined,
+    initial,
   );
   document.body.replaceChildren(form);
   const input = (name: string, value: string) =>
@@ -64,5 +66,22 @@ describe("renderFilters（AC-15〜19）", () => {
     expect(onChange).toHaveBeenLastCalledWith(EMPTY_FILTER);
     expect(input("team", "a").checked).toBe(false);
     expect(input("liveOnly", "1").checked).toBe(false);
+  });
+});
+
+describe("renderFilters の初期状態（AC-44）", () => {
+  const saved: Filter = { teams: ["b"], tiers: ["Core"], liveOnly: true, ltkOnly: false };
+
+  it("保存しておいた条件をチェックの初期状態にする", () => {
+    const { form } = setup(saved);
+    const checked = [...form.querySelectorAll<HTMLInputElement>("input:checked")].map((i) => `${i.name}=${i.value}`);
+    expect(checked).toEqual(["team=b", "tier=Core", "liveOnly=1"]);
+  });
+
+  it("初期状態があっても、解除ですべてのチェックが外れる", () => {
+    const { form, onChange } = setup(saved);
+    form.querySelector<HTMLButtonElement>("button.reset")!.click();
+    expect(onChange).toHaveBeenLastCalledWith(EMPTY_FILTER);
+    expect(form.querySelectorAll("input:checked")).toHaveLength(0);
   });
 });

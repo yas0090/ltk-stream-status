@@ -36,6 +36,8 @@ let stop: (() => void) | undefined;
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "Date"] });
   vi.setSystemTime(T0);
+  // 絞り込みの条件は保存されるので、テストの間で持ち越さない（AC-44）
+  localStorage.clear();
 });
 
 afterEach(() => {
@@ -151,6 +153,32 @@ describe("詳細フィルタの組み込み（AC-33〜35）", () => {
 
     root.querySelector<HTMLButtonElement>("button.reset")!.click();
     expect(root.querySelector(".player-card")).toBeNull();
+  });
+});
+
+describe("簡易絞り込みの保存（AC-44）", () => {
+  it("変更すると保存され、次に開いたときに復元される", async () => {
+    const first = await start(async () => siteData(T0));
+    first.querySelector<HTMLInputElement>('input[name="tier"][value="Core"]')!.click();
+    expect(JSON.parse(localStorage.getItem("ltk-stream-status:filter:v1")!)).toMatchObject({ tiers: ["Core"] });
+    stop?.();
+
+    const root = await start(async () => siteData(T0));
+    expect(root.querySelector<HTMLInputElement>('input[name="tier"][value="Core"]')!.checked).toBe(true);
+    expect(root.querySelector(".empty")).not.toBeNull();
+  });
+
+  it("解除すると条件なしが保存される", async () => {
+    localStorage.setItem("ltk-stream-status:filter:v1", JSON.stringify({ teams: [], tiers: ["Core"], liveOnly: false, ltkOnly: false }));
+    const root = await start(async () => siteData(T0));
+    root.querySelector<HTMLButtonElement>("button.reset")!.click();
+    expect(root.querySelector(".player-card")).not.toBeNull();
+    expect(JSON.parse(localStorage.getItem("ltk-stream-status:filter:v1")!)).toEqual({
+      teams: [],
+      tiers: [],
+      liveOnly: false,
+      ltkOnly: false,
+    });
   });
 });
 

@@ -2,14 +2,18 @@ import { EMPTY_FILTER, type Filter } from "../shared/filter";
 import { TIERS, type Tier } from "../shared/types";
 import { h } from "./dom";
 
-// color を渡すと、チップにその色の丸を付け、選択中はその色で塗る
-const checkbox = (name: string, value: string, label: string, color?: string) =>
-  h(
+// color を渡すと、チップにその色の丸を付け、選択中はその色で塗る。
+// checked は属性ではなくプロパティで付ける（属性だと「解除」の reset で未選択に戻らない）
+const checkbox = (name: string, value: string, label: string, checked: boolean, color?: string) => {
+  const input = h("input", { type: "checkbox", name, value });
+  input.checked = checked;
+  return h(
     "label",
     { class: color ? "chip chip--colored" : "chip", style: color && `--chip-color: ${color}` },
-    h("input", { type: "checkbox", name, value }),
+    input,
     h("span", {}, label),
   );
+};
 
 // カテゴリごとに1行にし、左端にカテゴリ名を置く。
 // legend はブラウザごとに描画が違うので読み上げ用にだけ使い、見た目のカテゴリ名は span で描く
@@ -37,11 +41,13 @@ const readFilter = (form: HTMLFormElement): Filter => {
   };
 };
 
-// チーム・階級は複数選択、配信中・LTK は切り替え（AC-15〜19）。両方選ぶと AND になるので「〜のみ」とは書かない
+// チーム・階級は複数選択、配信中・LTK は切り替え（AC-15〜19）。両方選ぶと AND になるので「〜のみ」とは書かない。
+// initial は保存しておいた条件で、チェックの初期状態にする（AC-44）
 export function renderFilters(
   teams: readonly { id: string; name: string; color?: string }[],
   onChange: (filter: Filter) => void,
   onOpenDetail?: () => void,
+  initial: Filter = EMPTY_FILTER,
 ): HTMLFormElement {
   const form = h(
     "form",
@@ -57,9 +63,9 @@ export function renderFilters(
         h("button", { type: "reset", class: "reset" }, "解除"),
       ),
     ),
-    group("チーム", ...teams.map((team) => checkbox("team", team.id, team.name, team.color))),
-    group("階級", ...TIERS.map((tier) => checkbox("tier", tier, tier))),
-    group("配信", checkbox("liveOnly", "1", "配信中"), checkbox("ltkOnly", "1", "LTK")),
+    group("チーム", ...teams.map((team) => checkbox("team", team.id, team.name, initial.teams.includes(team.id), team.color))),
+    group("階級", ...TIERS.map((tier) => checkbox("tier", tier, tier, initial.tiers.includes(tier)))),
+    group("配信", checkbox("liveOnly", "1", "配信中", initial.liveOnly), checkbox("ltkOnly", "1", "LTK", initial.ltkOnly)),
   );
 
   form.querySelector(".detail-open")?.addEventListener("click", () => onOpenDetail?.());

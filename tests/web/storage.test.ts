@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { HIDDEN_PLAYERS_KEY, loadHiddenPlayers, readItem, saveHiddenPlayers, writeItem } from "../../src/web/storage";
+import { EMPTY_FILTER } from "../../src/shared/filter";
+import {
+  FILTER_KEY,
+  HIDDEN_PLAYERS_KEY,
+  loadFilter,
+  loadHiddenPlayers,
+  readItem,
+  saveFilter,
+  saveHiddenPlayers,
+  writeItem,
+} from "../../src/web/storage";
 
 const memoryStorage = (initial: Record<string, string> = {}) => {
   const data = new Map(Object.entries(initial));
@@ -45,5 +55,41 @@ describe("詳細フィルタの保存と読み込み（AC-34, AC-36）", () => {
   it("保存領域がない環境でも動く", () => {
     expect(readItem("k", undefined)).toBeNull();
     expect(() => writeItem("k", "v", undefined)).not.toThrow();
+  });
+});
+
+describe("簡易絞り込みの保存と読み込み（AC-44）", () => {
+  const teamIds = ["a", "b"];
+
+  it("保存して読み込むと元に戻る", () => {
+    const storage = memoryStorage();
+    const filter = { teams: ["b"], tiers: ["Masters" as const], liveOnly: true, ltkOnly: false };
+    saveFilter(filter, storage);
+    expect(storage.data.has(FILTER_KEY)).toBe(true);
+    expect(loadFilter(teamIds, storage)).toEqual(filter);
+  });
+
+  it("何も保存されていなければ条件なし", () => {
+    expect(loadFilter(teamIds, memoryStorage())).toEqual(EMPTY_FILTER);
+  });
+
+  it.each(["not json", "null", "[1]", '"a"'])("形式が違う値（%s）は条件なしとして扱う", (value) => {
+    expect(loadFilter(teamIds, memoryStorage({ [FILTER_KEY]: value }))).toEqual(EMPTY_FILTER);
+  });
+
+  it("今のデータにないチームと定義外の階級は捨て、形式が違う項目は未選択にする", () => {
+    const value = JSON.stringify({ teams: ["a", "gone"], tiers: ["Core", "Bronze"], liveOnly: "yes", ltkOnly: true });
+    expect(loadFilter(teamIds, memoryStorage({ [FILTER_KEY]: value }))).toEqual({
+      teams: ["a"],
+      tiers: ["Core"],
+      liveOnly: false,
+      ltkOnly: true,
+    });
+    expect(loadFilter(teamIds, memoryStorage({ [FILTER_KEY]: '{"teams":"a","tiers":[1]}' }))).toEqual(EMPTY_FILTER);
+  });
+
+  it("保存領域が例外を投げても、例外を外に出さない", () => {
+    expect(loadFilter(teamIds, throwingStorage)).toEqual(EMPTY_FILTER);
+    expect(() => saveFilter(EMPTY_FILTER, throwingStorage)).not.toThrow();
   });
 });

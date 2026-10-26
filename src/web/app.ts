@@ -5,7 +5,7 @@ import { renderDetailFilter } from "./detail-filter";
 import { h } from "./dom";
 import { renderFilters, setHiddenCount } from "./filters";
 import { renderStaleWarning, renderTeams, renderUpdatedAt } from "./render";
-import { loadHiddenPlayers, saveHiddenPlayers } from "./storage";
+import { loadFilter, loadHiddenPlayers, saveFilter, saveHiddenPlayers } from "./storage";
 import { renderThemeToggle } from "./theme";
 
 export const RELOAD_INTERVAL_MS = 5 * 60_000;
@@ -94,7 +94,8 @@ export function createApp(root: HTMLElement, { loadData, now = () => new Date() 
     const key = data.teams.map((t) => `${t.id}:${t.name}:${t.players.map((p) => p.name).join(",")}`).join("\n");
     if (key === teamsKey) return;
     teamsKey = key;
-    filter = EMPTY_FILTER;
+    // 簡易絞り込みは保存しておいた条件から始める（AC-44）
+    filter = loadFilter(data.teams.map((t) => t.id));
     const detail = renderDetailFilter(data.teams, visibleHidden(), (next) => {
       hiddenPlayers = next;
       saveHiddenPlayers(next);
@@ -105,9 +106,11 @@ export function createApp(root: HTMLElement, { loadData, now = () => new Date() 
       data.teams,
       (next) => {
         filter = next;
+        saveFilter(next);
         renderList();
       },
       detail.open,
+      filter,
     );
     filtersSlot.replaceChildren(filtersForm);
   };
