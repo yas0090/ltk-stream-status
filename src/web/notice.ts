@@ -57,11 +57,11 @@ export function renderNotice(notice: Notice, schedule: Schedule, teams: readonly
   if (notice.kind === "next") {
     return h(
       "section",
-      { class: "match-notice match-notice--next", "aria-label": "次回の本戦" },
+      { class: "match-notice match-notice--next", "aria-label": "本戦スケジュール" },
       h(
         "p",
         { class: "mn-head" },
-        h("span", { class: "mn-label" }, "次回の本戦"),
+        h("span", { class: "mn-label" }, "本戦スケジュール"),
         h("time", { datetime: match.startAt }, `${notice.today ? "本日" : date} ${time}〜`),
         h("span", {}, matchName(match)),
       ),
@@ -71,11 +71,11 @@ export function renderNotice(notice: Notice, schedule: Schedule, teams: readonly
   const status = notice.live ? "配信中" : now >= new Date(match.startAt) ? `${time}〜` : `${time} 開始`;
   return h(
     "section",
-    { class: "match-notice match-notice--today", "aria-label": "本日の本戦" },
+    { class: "match-notice match-notice--today", "aria-label": "本戦スケジュール" },
     h(
       "div",
       { class: "mn-head" },
-      h("span", { class: "mn-label" }, "本日の本戦"),
+      h("span", { class: "mn-label" }, "本戦スケジュール"),
       h("strong", { class: "mn-name" }, matchName(match)),
       h("span", { class: "mn-status", "data-live": String(notice.live) }, status),
     ),
