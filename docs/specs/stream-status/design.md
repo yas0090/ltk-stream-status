@@ -267,7 +267,7 @@ type SiteData = {
 ### YouTube
 
 1. チャンネルごとに RSS（`https://www.youtube.com/feeds/videos.xml?channel_id=...`）を取得し、直近の動画 ID を集める。RSS はクォータを消費しない
-   - 公開日時が 7 日以内の動画だけを候補にして、API の呼び出し回数を減らす
+   - 公開日時が 7 日以内の動画だけを候補にして、API の呼び出し回数を減らす。公開日時は `published` と `updated` の新しい方を使う（事前に枠を作った配信は `published` が古いまま配信が始まり、候補から漏れていたため。2026-10-27 修正）
    - RSS の取得に失敗したチャンネルは `error` にする
 2. 候補の ID を `videos.list`（`part=snippet,contentDetails`）で 50 件ずつ問い合わせる。1 回 1 ユニット（`YOUTUBE_API_KEY`）
 3. 次の 2 つをどちらも満たす動画を配信中とみなす
