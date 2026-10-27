@@ -20,7 +20,7 @@ const state = (now: Date, used: number, overrides: Partial<FetchState> = {}): Fe
 describe("data/youtube-budget.yaml", () => {
   it("同梱の設定は正しい", () => {
     expect(budget.limit).toBe(9000);
-    expect(budget.tiers.map((t) => t.upTo)).toEqual([3000, 5000, 7000, 8000, 9000]);
+    expect(budget.tiers.map((t) => t.upTo)).toEqual([5000, 7000, 8000, 9000]);
   });
 
   it("upTo が小さい順でないか、limit を超えるとエラー", () => {
@@ -38,10 +38,9 @@ describe("planYouTube（AC-21, AC-43）", () => {
   it("朝・昼は使用量の段階ごとに間隔が広がる", () => {
     const cases: [number, number][] = [
       [0, 5],
-      [3000, 10],
-      [5000, 15],
-      [7000, 30],
-      [8000, 60],
+      [5000, 10],
+      [7000, 15],
+      [8000, 30],
     ];
     for (const [used, interval] of cases) {
       expect(planYouTube(state(DAY, used, { lastDiscoveryAt: ago(DAY, interval - 1) }), budget, DAY).discover).toBe(true);
@@ -53,11 +52,12 @@ describe("planYouTube（AC-21, AC-43）", () => {
     expect(planYouTube(state(NIGHT, 8500, { lastDiscoveryAt: ago(NIGHT, 5) }), budget, NIGHT).discover).toBe(true);
   });
 
-  it("取り直しは段階の間隔ごと。8,000 を超えたら取り直さない", () => {
+  it("取り直しは段階の間隔ごと。8,000 以上は取り直さない", () => {
     expect(planYouTube(state(DAY, 0), budget, DAY)).toMatchObject({ discover: true, fallback: true });
     const recent = { lastFallbackAt: ago(DAY, 10) };
     expect(planYouTube(state(DAY, 7500, recent), budget, DAY)).toMatchObject({ discover: true, fallback: false });
-    expect(planYouTube(state(DAY, 7500, { lastFallbackAt: ago(DAY, 30) }), budget, DAY).fallback).toBe(true);
+    expect(planYouTube(state(DAY, 7500, { lastFallbackAt: ago(DAY, 15) }), budget, DAY).fallback).toBe(true);
+    expect(planYouTube(state(DAY, 8000), budget, DAY)).toMatchObject({ discover: true, fallback: false });
     expect(planYouTube(state(DAY, 8500), budget, DAY)).toMatchObject({ discover: true, fallback: false });
   });
 

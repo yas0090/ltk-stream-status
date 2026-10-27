@@ -16,18 +16,15 @@ peakDiscoveryMinutes: 5
 #   discoveryMinutes: 新しい配信の確認の間隔（分）
 #   fallbackMinutes:  RSS に失敗したチャンネルを API で取り直す間隔（分）。null なら取り直さない
 tiers:
-  - upTo: 3000
+  - upTo: 5000
     discoveryMinutes: 5
     fallbackMinutes: 5
-  - upTo: 5000
+  - upTo: 7000
     discoveryMinutes: 10
     fallbackMinutes: 10
-  - upTo: 7000
+  - upTo: 8000
     discoveryMinutes: 15
     fallbackMinutes: 15
-  - upTo: 8000
-    discoveryMinutes: 30
-    fallbackMinutes: 30
   - upTo: 9000
-    discoveryMinutes: 60
+    discoveryMinutes: 30
     fallbackMinutes: null
