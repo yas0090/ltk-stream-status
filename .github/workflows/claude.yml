@@ -56,6 +56,8 @@ jobs:
           include_comments_by_actor: ${{ github.repository_owner }},claude[bot]
           claude_args: >-
             --allowedTools "Bash(npm test),Bash(npm run typecheck),Bash(npm run build),Bash(git:*),Bash(gh pr create:*)"
+          # 拒否されたコマンドなどを実行結果のページで見られるようにする（秘密情報は伏せ字になる）
+          display_report: true
 
       # 進み具合のコメントは失敗時の表示が保証されないので、別に知らせる（AC-15）
       - name: Report failure

@@ -79,6 +79,8 @@ claude-code-action も既定で書き込み権限のない人を拒否するが�
 
 許す Bash コマンド: `npm test`、`npm run typecheck`、`npm run build`、`git` の操作、`gh pr create`。`npm ci` や `npm install` は許さず、依存の追加が必要なら計画でそう伝え、持ち主が手元で行う。
 
+PR の本文は `tmp/pr-body.md` に書き、`gh pr create --body-file` の 1 コマンドで作らせる（2026-10-27 追加: #6 で `gh pr create` が許可の判定で拒否され、PR を作れなかったため。本文を `$(...)` やヒアドキュメントで渡したことが原因とみている）。`gh` が使うトークン（`GH_TOKEN`）は claude-code-action が Claude の実行環境に渡している。原因を追えるよう `display_report: true` で実行結果のページに報告を出す。
+
 ### 権限
 
 ```yaml

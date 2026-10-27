@@ -56,7 +56,8 @@ Issue に `claude` ラベルが付くか、持ち主が `@claude` とコメン�
 
 - 受け入れ条件に対応するテストを書き、`npm run typecheck`、`npm test`、`npm run build` を通す。通らないときは PR を作らず、原因をコメントする
 - コミットは Conventional Commits 形式で、本文は日本語
-- PR は `gh pr create` で作り、本文は `.github/pull_request_template.md` に沿って `Closes #<番号>` を入れる。確かめたことのチェックは、実際に行ったものだけ付ける
+- PR の本文は `.github/pull_request_template.md` に沿って `Closes #<番号>` を入れる。確かめたことのチェックは、実際に行ったものだけ付ける
+- PR は、本文を `tmp/pr-body.md` にファイルとして書いてから、`gh pr create --base main --title "<タイトル>" --body-file tmp/pr-body.md` の 1 コマンドで作る。`$(...)`、ヒアドキュメント、`&&` や `;` でのつなぎは、許可の判定で拒否されるので使わない
 - 画面を変えた PR には、preview.yml がプレビューの URL をコメントする。持ち主にそこで表示を確かめるよう書き添える
 
 ### してはいけないこと
