@@ -72,7 +72,7 @@ describe("renderNotice（AC-46, AC-48, AC-49）", () => {
   it("次回の案内は 1 行で、日付（曜日）と開始時刻、ステージと Day を日本時間で出し、その下に対戦カードを並べる", () => {
     const el = render(schedule(), new Date("2026-10-27T23:30:00+09:00"));
     expect(el.classList.contains("match-notice--next")).toBe(true);
-    expect(el.querySelector(".mn-head")?.textContent).toBe("次回の本戦10/28（水） 17:00〜Masters Cup DAY 2");
+    expect(el.querySelector(".mn-head")?.textContent).toBe("本戦スケジュール10/28（水） 17:00〜Masters Cup DAY 2");
     expect(el.querySelector("time")?.getAttribute("datetime")).toBe("2026-10-28T08:00:00.000Z");
     expect([...el.querySelectorAll(".mn-game")].map((g) => g.textContent)).toEqual(["Camellia CrownvsDahlia DiademMasters"]);
     expect(el.querySelector(".mn-link")).toBeNull();
