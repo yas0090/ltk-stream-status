@@ -1,0 +1,31 @@
+name: 不具合
+description: 期待どおりに動かないもの
+labels: [bug]
+body:
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+      placeholder: |
+        1. 〜を開く
+        2. 〜を押す
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待する動き
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 実際の動き
+      description: スクリーンショットやログがあれば貼る
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 環境
+      placeholder: "例: iPhone / Safari、Mac / Chrome"

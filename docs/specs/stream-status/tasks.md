@@ -66,7 +66,7 @@
   - `dist/` を Secrets の値で grep し、見つかったら失敗させる
 - [x] 5-4. GitHub の設定（ユーザーが行う。手順を案内する）
   - 公開リポジトリの作成、Pages のソースを GitHub Actions にする、Secrets の登録、Secret scanning と Push protection の有効化、YouTube キーの API 制限
-- [ ] 5-5. 公開後に確かめる（AC-21, AC-24, AC-25）
+- [ ] 5-5. 公開後に確かめる（AC-21, AC-24, AC-25）（Issue #2 へ移した）
   - Actions の実行履歴で 5 分ごとに動いていること
   - サイトが更新されていること
   - Google Cloud Console で YouTube のクォータ使用量を確かめること
@@ -151,7 +151,7 @@
   - `cron/` に Worker と設定（`*/5 * * * *`）を置く。テスト: GitHub API を正しい URL・ヘッダーで呼ぶこと、失敗をログに残すこと
   - Worker をデプロイし、Secret にトークンを登録する（ユーザーと一緒に行う）
   - 2026-10-26: デプロイ後、Cron が動き始めるまで約 12 分かかった。12:25 以降は 5 分ごとに起動され、`state.json` の使用量も引き継がれている
-- [ ] 9-8. 切り替えを確認し、GitHub Pages を停止する（AC-41）
+- [ ] 9-8. 切り替えを確認し、GitHub Pages を停止する（AC-41）（Issue #1 へ移した）
   - Cloudflare Pages の URL で表示・更新を確認してから、GitHub Pages を無効にする
   - Worker から 5 分ごとに起動されていること、`state.json` の使用量と Google Cloud Console の使用量が大きくずれていないことを確かめる
 

@@ -1,0 +1,30 @@
+name: 機能追加・改善
+description: 新しい機能や、今ある機能の改善
+labels: [enhancement]
+body:
+  - type: textarea
+    id: purpose
+    attributes:
+      label: 目的
+      description: なぜ必要か。誰の、どんな困りごとを解決するか
+    validations:
+      required: true
+  - type: textarea
+    id: stories
+    attributes:
+      label: ユーザーストーリー
+      placeholder: "閲覧者として、〜したい。なぜなら〜だから"
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 受け入れ条件
+      description: 確かめられる形で書く。テストと対応させる
+      placeholder: |
+        - [ ] 〜のとき、〜が表示される
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: 補足
+      description: 仕様書（docs/specs/）へのリンク、参考、決めていないこと
