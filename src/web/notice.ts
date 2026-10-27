@@ -36,6 +36,14 @@ function renderGame(game: Match["games"][number], teams: readonly TeamStatus[]):
   );
 }
 
+// 対戦カードがなければ、本戦の階級を代わりに出す（AC-53）
+function renderGames(match: Match, teams: readonly TeamStatus[]): HTMLElement {
+  if (match.games.length === 0) {
+    return h("ul", { class: "mn-games" }, h("li", { class: "mn-game" }, h("span", { class: "mn-tiers" }, (match.tiers ?? []).join(" / "))));
+  }
+  return h("ul", { class: "mn-games" }, match.games.map((g) => renderGame(g, teams)));
+}
+
 const OFFICIAL_LABEL = { twitch: "公式 Twitch", youtube: "公式 YouTube" } as const;
 
 // 配信中なら配信ページ、それ以外はチャンネルページへのリンク（AC-46, AC-47）
@@ -65,7 +73,7 @@ export function renderNotice(notice: Notice, schedule: Schedule, teams: readonly
         h("time", { datetime: match.startAt }, `${notice.today ? "本日" : date} ${time}〜`),
         h("span", {}, matchName(match)),
       ),
-      h("ul", { class: "mn-games" }, match.games.map((g) => renderGame(g, teams))),
+      renderGames(match, teams),
     );
   }
   const status = notice.live ? "配信中" : now >= new Date(match.startAt) ? `${time}〜` : `${time} 開始`;
@@ -79,7 +87,7 @@ export function renderNotice(notice: Notice, schedule: Schedule, teams: readonly
       h("strong", { class: "mn-name" }, matchName(match)),
       h("span", { class: "mn-status", "data-live": String(notice.live) }, status),
     ),
-    h("ul", { class: "mn-games" }, match.games.map((g) => renderGame(g, teams))),
+    renderGames(match, teams),
     h("div", { class: "mn-links" }, renderOfficialLink(schedule.official.twitch), renderOfficialLink(schedule.official.youtube)),
   );
 }

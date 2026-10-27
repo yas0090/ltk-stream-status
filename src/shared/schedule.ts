@@ -14,8 +14,12 @@ export const OFFICIAL_GRACE_MS = 3 * HOUR;
 
 const jstDate = (iso: string) => new Date(new Date(iso).getTime() + 9 * HOUR).toISOString().slice(0, 10);
 
-// その本戦の日の 16:00（日本時間）
-export const noticeFrom = (match: Match) => jstAt(jstDate(match.startAt), NOTICE_FROM);
+// 案内の表示と公式取得を始める時刻。本戦の日の 16:00（日本時間）。16:00 より前に始まる本戦は開始時刻（AC-54）
+export const noticeFrom = (match: Match) => {
+  const from = jstAt(jstDate(match.startAt), NOTICE_FROM);
+  const start = new Date(match.startAt);
+  return start < from ? start : from;
+};
 
 // 公式チャンネルの配信状態を取得する時間帯か（AC-47）
 export const isOfficialWindow = (matches: readonly Match[], now: Date) =>

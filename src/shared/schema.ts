@@ -90,7 +90,9 @@ const matchSchema = z.strictObject({
   day: z.string().min(1),
   start: timeSchema,
   end: timeSchema,
-  games: z.array(gameSchema).min(1, "対戦カードを1つ以上書いてください"),
+  // 対戦カードが未定の本戦は games を省略（または空に）し、本戦単位の tiers を書く（AC-50）
+  games: z.array(gameSchema).optional(),
+  tiers: z.array(z.enum(TIERS)).optional(),
 });
 
 const scheduleFileSchema = z.strictObject({
@@ -141,7 +143,22 @@ export function parseScheduleData(input: unknown, teamIds: readonly string[]): S
         if (match.start >= match.end) {
           ctx.addIssue({ code: "custom", path: ["matches", mi, "end"], message: "終了予定時刻は開始時刻より後にしてください" });
         }
-        match.games.forEach((game, gi) => {
+        const games = match.games ?? [];
+        if (games.length === 0 && !match.tiers?.length) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["matches", mi],
+            message: "対戦カード（games）か、本戦の階級（tiers）のどちらかを書いてください",
+          });
+        }
+        if (games.length > 0 && match.tiers !== undefined) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["matches", mi, "tiers"],
+            message: "games がある本戦には、本戦単位の tiers は書けません（階級は games の中に書いてください）",
+          });
+        }
+        games.forEach((game, gi) => {
           for (const side of ["blue", "red"] as const) {
             if (!teamIds.includes(game[side])) {
               ctx.addIssue({
@@ -168,6 +185,7 @@ export const toMatches = (file: ScheduleFile): Match[] =>
       day: m.day,
       startAt: jstAt(m.date, m.start).toISOString(),
       endAt: jstAt(m.date, m.end).toISOString(),
-      games: m.games.map((g) => ({ blue: g.blue, red: g.red, tiers: [...g.tiers] })),
+      games: (m.games ?? []).map((g) => ({ blue: g.blue, red: g.red, tiers: [...g.tiers] })),
+      ...(m.tiers?.length ? { tiers: [...m.tiers] } : {}),
     }))
     .sort((a, b) => a.startAt.localeCompare(b.startAt));

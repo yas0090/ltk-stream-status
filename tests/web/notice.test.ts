@@ -82,3 +82,34 @@ describe("renderNotice（AC-46, AC-48, AC-49）", () => {
     expect(render(schedule(), new Date("2026-10-27T12:00:00+09:00")).querySelector("time")?.textContent).toBe("本日 18:00〜");
   });
 });
+
+describe("対戦カードのない本戦（AC-53）", () => {
+  const tierOnly = (): Schedule => ({
+    matches: [
+      {
+        stage: "Playoffs",
+        day: "DAY 1",
+        startAt: "2026-11-21T01:00:00.000Z",
+        endAt: "2026-11-21T14:00:00.000Z",
+        games: [],
+        tiers: ["Next", "Core", "Masters"],
+      },
+    ],
+    official: { twitch: official("twitch", false), youtube: official("youtube", false) },
+  });
+
+  it("当日の案内に、対戦カードの代わりに階級を出す", () => {
+    const el = render(tierOnly(), new Date("2026-11-21T10:00:00+09:00"));
+    expect(el.classList.contains("match-notice--today")).toBe(true);
+    expect(el.querySelector(".mn-name")?.textContent).toBe("Playoffs DAY 1");
+    expect(el.querySelector(".mn-team")).toBeNull();
+    expect(el.querySelector(".mn-tiers")?.textContent).toBe("Next / Core / Masters");
+  });
+
+  it("次回の案内にも階級を出す", () => {
+    const el = render(tierOnly(), new Date("2026-11-20T12:00:00+09:00"));
+    expect(el.classList.contains("match-notice--next")).toBe(true);
+    expect(el.querySelector(".mn-team")).toBeNull();
+    expect(el.querySelector(".mn-tiers")?.textContent).toBe("Next / Core / Masters");
+  });
+});
