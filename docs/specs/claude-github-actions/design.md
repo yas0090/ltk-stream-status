@@ -143,9 +143,12 @@ on:
 
 ## 実装時に確かめること
 
-- Claude GitHub App のトークンで作った PR で、test.yml と preview.yml が動くか
-- `gh pr create` を Claude から使えるか（使うトークンと `--allowedTools` の書き方）
-- リポジトリの `.claude/skills/` と CLAUDE.md を、Actions 上の Claude が読むか
+2026-10-27 に #6, #9 で確かめた結果。
+
+- Claude GitHub App のトークンで作った PR で、test.yml と preview.yml が動くか → 動いた（PR #11）
+- `gh pr create` を Claude から使えるか → `GH_TOKEN` は渡されているが、本文を `$(...)` などで渡すと拒否された。`--body-file` の 1 コマンドにして作れた（PR #11）
+- リポジトリの CLAUDE.md を、Actions 上の Claude が読むか → 読んだ（段階の判断、承認の記録、PR テンプレートに従っていた）。`.claude/skills/` は使う場面がなく、確かめていない
+- App のトークンは action の最後に失効するため、後のステップで PR を作る方法は使えない
 
 ## 受け入れ条件と確かめ方
 
