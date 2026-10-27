@@ -71,9 +71,15 @@ describe("createApp（AC-10）", () => {
 
   it("ページ下部に訂正・削除の依頼を受ける連絡先（X）を載せる（AC-30）", async () => {
     const root = await start(async () => siteData(T0));
-    const link = root.querySelector<HTMLAnchorElement>('footer a[href="https://x.com/yascrime"]');
-    expect(link?.textContent).toBe("@yascrime");
+    const link = root.querySelector<HTMLAnchorElement>('footer a[href="https://x.com/yascrim83"]');
+    expect(link?.textContent).toBe("@yascrim83");
     expect(link?.target).toBe("_blank");
+  });
+
+  it("ページ下部に古い X の ID（yascrime）が残っていない（AC-30）", async () => {
+    const root = await start(async () => siteData(T0));
+    expect(root.querySelector('footer a[href*="yascrime"]')).toBeNull();
+    expect(root.querySelector("footer")?.textContent).not.toContain("yascrime");
   });
 
   it("5分ごとにデータを読み直す", async () => {

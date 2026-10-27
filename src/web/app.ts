@@ -40,7 +40,7 @@ const renderFooter = () =>
       "p",
       {},
       "掲載内容の訂正・削除のご依頼や不具合の報告は、X の ",
-      externalLink("https://x.com/yascrime", {}, "@yascrime"),
+      externalLink("https://x.com/yascrim83", {}, "@yascrim83"),
       " までお願いします。",
     ),
     h(
