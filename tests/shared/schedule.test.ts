@@ -118,3 +118,43 @@ describe("pickNotice（AC-46, AC-48）", () => {
     expect(pickNotice(undefined, jst("12:00"))).toBeUndefined();
   });
 });
+
+describe("対戦カードのない本戦（AC-50〜54）", () => {
+  const playoffs = match({ date: "2026-11-21", stage: "Playoffs", day: "DAY 1", start: "10:00", games: undefined, tiers: ["Next", "Core", "Masters"] });
+  const playoffSchedule = (): Schedule => ({
+    matches: toMatches(parseScheduleData(file([playoffs, match({ date: "2026-11-22", start: "18:00" })]), TEAM_IDS)),
+    official: { twitch: status("twitch", false), youtube: status("youtube", false) },
+  });
+
+  it("games を省略しても空にしても、tiers があれば受け付ける（AC-50）", () => {
+    expect(parseScheduleData(file([playoffs]), TEAM_IDS).matches).toHaveLength(1);
+    expect(parseScheduleData(file([{ ...playoffs, games: [] }]), TEAM_IDS).matches).toHaveLength(1);
+    expect(toMatches(parseScheduleData(file([playoffs]), TEAM_IDS))[0]).toMatchObject({ games: [], tiers: ["Next", "Core", "Masters"] });
+  });
+
+  it.each([
+    ["games も tiers もない", { ...playoffs, tiers: undefined }, /games.*tiers/],
+    ["games も tiers も空", { ...playoffs, games: [], tiers: [] }, /games.*tiers/],
+    ["定義外の階級", { ...playoffs, tiers: ["Pro"] }, /tiers/],
+    ["games と tiers の両方", match({ tiers: ["Core"] }), /matches\.0\.tiers/],
+  ])("%s はエラー（AC-51）", (_label, m, message) => {
+    expect(() => parseScheduleData(file([m]), TEAM_IDS)).toThrow(DataValidationError);
+    expect(() => parseScheduleData(file([m]), TEAM_IDS)).toThrow(message);
+  });
+
+  it("対戦カードのある本戦は tiers を持たない（AC-55）", () => {
+    expect(toMatches(parseScheduleData(file([match()]), TEAM_IDS))[0]).not.toHaveProperty("tiers");
+  });
+
+  it("10:00 開始の本戦は、10:00 から取得と案内を始める。18:00 開始は 16:00 のまま（AC-54）", () => {
+    const { matches } = playoffSchedule();
+    const day = "2026-11-21";
+    expect(isOfficialWindow(matches, jst("09:59", day))).toBe(false);
+    expect(isOfficialWindow(matches, jst("10:00", day))).toBe(true);
+    expect(pickNotice(playoffSchedule(), jst("09:59", day))).toMatchObject({ kind: "next", today: true });
+    expect(pickNotice(playoffSchedule(), jst("10:00", day))).toMatchObject({ kind: "today", match: { day: "DAY 1" } });
+    const later = "2026-11-22";
+    expect(isOfficialWindow(matches, jst("15:59", later))).toBe(false);
+    expect(isOfficialWindow(matches, jst("16:00", later))).toBe(true);
+  });
+});

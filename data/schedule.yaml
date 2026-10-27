@@ -1,6 +1,6 @@
 # 本戦の日程（公式配信がある日）。ページ先頭の案内に使う
 # - 日付と時刻は日本時間。終了が日をまたぐ場合は 24:00 以降で書く（例: 25:30）
-# - 本戦の日の 16:00 から終了予定時刻まで「本日の本戦」を案内し、それ以外は次の本戦を1行で表示する
+# - 本戦の日の 16:00（16:00 より前に始まる本戦は開始時刻）から終了予定時刻まで「本日の本戦」を案内し、それ以外は次の本戦を1行で表示する
 # - 本戦の日だけ、公式チャンネルの配信状態も取得する（終了予定時刻の3時間後まで）
 # - 誤りがあると更新処理がエラーで止まり、サイトは前回の状態のまま残る
 #
@@ -12,6 +12,7 @@
 #   start     配信の開始時刻（HH:MM）
 #   end       配信の終了予定時刻（HH:MM）。公表されていないので仮の値
 #   games     対戦カード。blue / red は teams.yaml のチーム id、tiers はその試合の階級
+#   tiers     本戦単位の階級。対戦カードが未定のときだけ、games の代わりに書く（games と同時には書けない）
 #
 # 出典: LTK 公式の告知画像「Regular Stage」「Masters Cup」（2026-10-26 確認）
 #       開始時刻は Regular Stage が 18:00、Masters Cup が 17:00 の予定。終了予定時刻は仮に 23:00 とする
@@ -100,3 +101,18 @@ matches:
     games:
       - { blue: dahlia-diadem, red: laurel-regalia, tiers: [Masters] }
       - { blue: camellia-crown, red: iris-tiara, tiers: [Masters] }
+
+  # 対戦カードは未定。決まったら games を書き足して tiers は消す
+  - date: 2026-11-21
+    stage: Playoffs
+    day: DAY 1
+    start: "10:00"
+    end: "23:00"
+    tiers: [Next, Core, Masters]
+
+  - date: 2026-11-22
+    stage: Playoffs
+    day: DAY 2
+    start: "10:00"
+    end: "23:00"
+    tiers: [Next, Core, Masters]

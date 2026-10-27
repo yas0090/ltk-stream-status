@@ -52,7 +52,10 @@ export type Match = {
   // ISO 8601
   startAt: string;
   endAt: string;
+  // 対戦カード。未定なら空（AC-50）
   games: Game[];
+  // 対戦カードがないときの階級（AC-50, AC-53）。games があれば省略
+  tiers?: Tier[];
 };
 
 export type Schedule = {
