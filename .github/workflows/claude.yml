@@ -1,0 +1,69 @@
+name: claude
+
+# Issue に claude ラベルを付けるか、claude ラベル付きの Issue に @claude とコメントすると、
+# Claude が計画を示し、承認されると実装して PR を作る（docs/specs/claude-github-actions/）
+on:
+  issues:
+    types: [labeled]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
+# 同じ Issue での実行は重ねず、順に動かす
+concurrency:
+  group: claude-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  claude:
+    # 持ち主の操作だけで動かす（AC-12）。PR へのコメントは対象外
+    if: >-
+      github.actor == github.repository_owner && (
+        (github.event_name == 'issues' && github.event.label.name == 'claude') ||
+        (github.event_name == 'issue_comment' &&
+          !github.event.issue.pull_request &&
+          contains(github.event.comment.body, '@claude') &&
+          contains(github.event.issue.labels.*.name, 'claude'))
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # 渡す秘密情報は Claude のトークンだけにする（AC-13）。使えるコマンドも絞る（AC-14）
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          label_trigger: claude
+          trigger_phrase: "@claude"
+          branch_prefix: claude/
+          branch_name_template: "{{prefix}}{{entityNumber}}-{{description}}"
+          # 公開リポジトリなので、他人のコメントに紛れ込ませた指示を読ませない
+          include_comments_by_actor: ${{ github.repository_owner }},claude[bot]
+          claude_args: >-
+            --allowedTools "Bash(npm test),Bash(npm run typecheck),Bash(npm run build),Bash(git:*),Bash(gh pr create:*)"
+
+      # 進み具合のコメントは失敗時の表示が保証されないので、別に知らせる（AC-15）
+      - name: Report failure
+        if: failure() || cancelled()
+        run: |
+          gh issue comment "$ISSUE" --body "Claude の実行が失敗、または中断されました。実行ログ: $RUN_URL"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          ISSUE: ${{ github.event.issue.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
