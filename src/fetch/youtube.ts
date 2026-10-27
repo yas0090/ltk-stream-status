@@ -29,12 +29,16 @@ const CONCURRENCY = 10;
 export const youtubeChannelUrl = (channelId: string) => `https://www.youtube.com/channel/${channelId}`;
 const videoUrl = (videoId: string) => `https://www.youtube.com/watch?v=${videoId}`;
 
-// RSS は構造が決まっているので、XML パーサーを使わずに必要な要素だけ取り出す
+// RSS は構造が決まっているので、XML パーサーを使わずに必要な要素だけ取り出す。
+// 事前に枠を作った配信は published が古いまま配信が始まるので、updated の方が新しければそちらを使う
 export function parseFeed(xml: string): FeedEntry[] {
   return [...xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g)].flatMap(([, entry = ""]) => {
     const videoId = /<yt:videoId>([^<]+)<\/yt:videoId>/.exec(entry)?.[1];
     const published = /<published>([^<]+)<\/published>/.exec(entry)?.[1];
-    return videoId && published ? [{ videoId, published: new Date(published) }] : [];
+    const updated = /<updated>([^<]+)<\/updated>/.exec(entry)?.[1];
+    if (!videoId || !published) return [];
+    const dates = [new Date(published), ...(updated ? [new Date(updated)] : [])];
+    return [{ videoId, published: new Date(Math.max(...dates.map((d) => d.getTime()))) }];
   });
 }
 

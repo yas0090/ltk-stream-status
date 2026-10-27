@@ -14,7 +14,7 @@ const CH_A = "UC" + "a".repeat(22);
 const CH_B = "UC" + "b".repeat(22);
 const recent = "2026-10-25T10:00:00+00:00";
 
-const feed = (entries: { id: string; published: string }[]) => `<?xml version="1.0" encoding="UTF-8"?>
+const feed = (entries: { id: string; published: string; updated?: string }[]) => `<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns="http://www.w3.org/2005/Atom">
   <title>channel</title>
   ${entries
@@ -23,7 +23,7 @@ const feed = (entries: { id: string; published: string }[]) => `<?xml version="1
     <id>yt:video:${e.id}</id>
     <yt:videoId>${e.id}</yt:videoId>
     <title>title</title>
-    <published>${e.published}</published>
+    <published>${e.published}</published>${e.updated ? `\n    <updated>${e.updated}</updated>` : ""}
   </entry>`,
     )
     .join("\n")}
@@ -86,6 +86,12 @@ describe("parseFeed", () => {
   it("動画 ID と公開日時を取り出す", () => {
     expect(parseFeed(feed([{ id: "v1", published: recent }]))).toEqual([{ videoId: "v1", published: new Date(recent) }]);
     expect(parseFeed(feed([]))).toEqual([]);
+  });
+
+  it("事前に枠を作った配信のように updated の方が新しければ、updated を使う", () => {
+    const old = "2026-10-16T01:38:10+00:00";
+    expect(parseFeed(feed([{ id: "v1", published: old, updated: recent }]))).toEqual([{ videoId: "v1", published: new Date(recent) }]);
+    expect(parseFeed(feed([{ id: "v2", published: recent, updated: old }]))).toEqual([{ videoId: "v2", published: new Date(recent) }]);
   });
 });
 
