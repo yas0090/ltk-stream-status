@@ -232,7 +232,7 @@ teams:
           - platform: twitch
             login: yufuna
           - platform: youtube
-            channelId: UCLKWaeDR1TYpgbx5xn9rojA  # yufuna
+            channelId: UCjSeZKF4cMVCsuI9Yk92txg  # ゆふな【解説】
       - name: 空澄セナ
         tier: Next
         role: MID
