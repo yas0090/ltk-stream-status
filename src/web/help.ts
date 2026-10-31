@@ -28,9 +28,11 @@ const renderSampleCard = () => {
       ],
     },
     "sample",
+    // 星も見せる。操作はできないので何もしない
+    { favorites: [], onToggle: () => {} },
   );
   card.setAttribute("inert", "");
-  return h("div", { class: "help-sample" }, card);
+  return h("div", { class: "help-sample", style: "--team-color: #2f6fdb" }, card);
 };
 
 const section = (title: string, ...body: (Node | string)[]) =>

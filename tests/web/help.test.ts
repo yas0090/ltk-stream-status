@@ -93,7 +93,7 @@ describe("ヘルプのモーダル（AC-81〜89）", () => {
       "本戦スケジュール",
     ]);
     expect(dialog.querySelector(".live-badge")?.textContent).toBe("LIVE");
-    expect(dialog.querySelectorAll(".star-icon").length).toBe(2);
+    expect(dialog.querySelectorAll(".star-icon").length).toBe(3);
     expect(dialog.querySelectorAll(".help-icons .platform-icon").length).toBe(2);
   });
 
@@ -103,7 +103,7 @@ describe("ヘルプのモーダル（AC-81〜89）", () => {
     expect(card?.getAttribute("data-live")).toBe("true");
     expect(card?.hasAttribute("inert")).toBe(true);
     expect(card?.querySelector<HTMLImageElement>(".thumb-img")?.src).toContain("data:image/svg+xml");
-    expect(card?.querySelector(".fav-btn")).toBeNull();
+    expect(card?.querySelector(".fav-btn .star-icon")).not.toBeNull();
   });
 
   it("フィルタの説明が画面の名前と合っている", () => {

@@ -1317,18 +1317,29 @@ a {
   line-height: 1.6;
 }
 
+/* 日本語の改行は文節の区切りを優先し、禁則処理を厳しくする */
+.help-body {
+  word-break: auto-phrase;
+  line-break: strict;
+}
+
 .help-section + .help-section {
-  margin-top: 16px;
+  margin-top: 28px;
 }
 
 .help-section h3 {
-  margin: 0 0 4px;
-  font-size: 0.9375rem;
+  margin: 0 0 10px;
+  padding: 6px 10px;
+  border-left: 4px solid var(--text);
+  border-radius: 0 6px 6px 0;
+  background: color-mix(in srgb, var(--text) 8%, var(--surface));
+  font-size: 1rem;
 }
 
 .help-section p {
-  margin: 4px 0 0;
-  overflow-wrap: anywhere;
+  margin: 6px 0 0;
+  overflow-wrap: break-word;
+  text-wrap: pretty;
 }
 
 .help-line {
@@ -1365,9 +1376,15 @@ a {
   transform: none;
 }
 
+/* サンプルカードを載せる枠。実際の画面のチームカードに近い見た目にする */
 .help-sample {
-  max-width: 260px;
-  margin: 0 0 8px;
+  --team-border: color-mix(in srgb, var(--team-color) 35%, var(--border));
+  max-width: 280px;
+  margin: 0 0 12px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--text) 4%, var(--surface));
 }
 
 .help-foot {
