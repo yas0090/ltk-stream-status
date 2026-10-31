@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { jstAt } from "./schedule";
-import { ROLES, TIERS, type Match } from "./types";
+import { CHANGELOG_TYPES, ROLES, TIERS, type Match } from "./types";
 
 const twitchChannelSchema = z.strictObject({
   platform: z.literal("twitch"),
@@ -103,8 +103,32 @@ const scheduleFileSchema = z.strictObject({
   matches: z.array(matchSchema),
 });
 
+// 更新履歴。日付は実在する YYYY-MM-DD、本文は閲覧者向けの言葉で書く
+const DATE_FORMAT = /^\d{4}-\d{2}-\d{2}$/;
 
-export type ChannelInput = z.infer<typeof channelSchema>;
+const changelogFileSchema = z
+  .strictObject({
+    entries: z.array(
+      z.strictObject({
+        date: z.string().regex(DATE_FORMAT, "日付は YYYY-MM-DD 形式で書いてください"),
+        type: z.enum(CHANGELOG_TYPES, { error: "種類は 新機能・改善・修正 のどれかで書いてください" }),
+        body: z.string().trim().min(1, "本文を書いてください"),
+      }),
+    ),
+  })
+  .superRefine((data, ctx) => {
+    data.entries.forEach((entry, i) => {
+      // 2026-02-30 のような日付は繰り上がるので、戻した文字列が一致するかで実在を確かめる
+      const parsed = new Date(`${entry.date}T00:00:00Z`);
+      if (DATE_FORMAT.test(entry.date) && (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== entry.date)) {
+        ctx.addIssue({ code: "custom", path: ["entries", i, "date"], message: `日付「${entry.date}」が正しくありません` });
+      }
+    });
+  });
+
+export type ChangelogFile = z.infer<typeof changelogFileSchema>;
+
+export type ChannelInput= z.infer<typeof channelSchema>;
 export type PlayerInput = z.infer<typeof playerSchema>;
 export type TeamInput = z.infer<typeof teamSchema>;
 export type TeamsFile = z.infer<typeof teamsFileSchema>;
@@ -126,6 +150,9 @@ export const parseTeamsData = (input: unknown): TeamsFile => parseWith(teamsFile
 
 export const parseKeywordsData = (input: unknown): KeywordsFile =>
   parseWith(keywordsFileSchema, input, "keywords.yaml");
+
+export const parseChangelogData = (input: unknown): ChangelogFile =>
+  parseWith(changelogFileSchema, input, "changelog.yaml");
 
 // teams.yaml にあるチーム id だけを対戦カードに使える
 export function parseScheduleData(input: unknown, teamIds: readonly string[]): ScheduleFile {

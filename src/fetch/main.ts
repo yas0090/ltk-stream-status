@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { parseArgs } from "node:util";
 import { parse as parseYaml } from "yaml";
-import { parseKeywordsData, parseScheduleData, parseTeamsData } from "../shared/schema";
+import { parseChangelogData, parseKeywordsData, parseScheduleData, parseTeamsData } from "../shared/schema";
 import { parseBudget } from "./budget";
 import { generateSiteData, requiredSecrets } from "./generate";
 import { loadState } from "./state";
@@ -31,6 +31,11 @@ async function main() {
     ? parseScheduleData(await readYaml("schedule.yaml"), teams.teams.map((t) => t.id))
     : undefined;
 
+  // 更新履歴。ファイルがなければ出さない
+  const changelog = existsSync(join(values.data, "changelog.yaml"))
+    ? parseChangelogData(await readYaml("changelog.yaml"))
+    : undefined;
+
   const missing = requiredSecrets(teams).filter((name) => !process.env[name]);
   if (missing.length > 0) throw new Error(`環境変数が設定されていません: ${missing.join(", ")}`);
 
@@ -51,7 +56,7 @@ async function main() {
       youtubeAvatars: (channelIds) => fetchYouTubeAvatars(channelIds, youtube),
       youtubeUsage: () => ({ used: youtube.used, exceeded: youtube.exceeded }),
     },
-    { now, previousState, budget, schedule },
+    { now, previousState, budget, schedule, changelog },
   );
 
   await mkdir(dirname(values.out), { recursive: true });

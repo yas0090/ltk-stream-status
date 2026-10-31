@@ -65,10 +65,16 @@ export type Schedule = {
   official: { twitch: ChannelStatus; youtube: ChannelStatus };
 };
 
+export const CHANGELOG_TYPES = ["新機能", "改善", "修正"] as const;
+export type ChangelogType = (typeof CHANGELOG_TYPES)[number];
+export type ChangelogEntry = { date: string; type: ChangelogType; body: string };
+
 // site-data.json の形式
 export type SiteData = {
   generatedAt: string;
   teams: TeamStatus[];
   // 本戦の案内（AC-45〜49）。schedule.yaml がなければ省略
   schedule?: Schedule;
+  // 更新履歴。changelog.yaml がなければ省略
+  changelog?: ChangelogEntry[];
 };
