@@ -141,3 +141,19 @@ describe("ヘルプのモーダル（AC-81〜89）", () => {
     expect(dialog.open).toBe(false);
   });
 });
+
+describe("ヘルプの文章（AC-93, AC-94）", () => {
+  it("配信タイトルの LTK タグの説明がある", () => {
+    const { dialog } = renderHelp(memoryStorage());
+    const tag = dialog.querySelector(".help-line .ltk-tag");
+    expect(tag?.textContent).toBe("LTK");
+    expect(tag?.parentElement?.textContent).toContain("配信タイトルの左に付くタグ");
+  });
+
+  it("句点のあとで改行する", () => {
+    const { dialog } = renderHelp(memoryStorage());
+    const p = dialog.querySelector(".help-section p");
+    expect(p?.querySelectorAll("br").length).toBe(1);
+    expect(p?.firstChild?.textContent?.endsWith("。")).toBe(true);
+  });
+});
