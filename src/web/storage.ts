@@ -2,11 +2,12 @@ import { EMPTY_FILTER, type Filter } from "../shared/filter";
 import { TIERS, type Tier } from "../shared/types";
 
 // ブラウザへの設定の保存。保存領域が使えない環境でも例外を外に出さない（AC-36, AC-39, AC-44）
-type KeyValueStorage = Pick<Storage, "getItem" | "setItem">;
+type KeyValueStorage = Pick<Storage, "getItem" | "setItem"> & Partial<Pick<Storage, "removeItem">>;
 
 export const HIDDEN_PLAYERS_KEY = "ltk-stream-status:hidden-players:v1";
 export const FAVORITES_KEY = "ltk-stream-status:favorites:v1";
 export const FILTER_KEY = "ltk-stream-status:filter:v1";
+export const HELP_SEEN_KEY = "ltk-stream-status:help-seen:v1";
 
 // localStorage へのアクセス自体が例外を投げるブラウザがあるので、取得も try で囲む
 export function browserStorage(): KeyValueStorage | undefined {
@@ -84,4 +85,32 @@ export function loadFilter(teamIds: readonly string[], storage = browserStorage(
 
 export function saveFilter(filter: Filter, storage = browserStorage()): void {
   writeItem(FILTER_KEY, JSON.stringify(filter), storage);
+}
+
+// 保存領域が読み書きできるか。読めても書けない環境（容量超過、プライベートモード）では閉じた記録が残らず毎回出てしまうので、試し書きで確かめる
+function canUseStorage(storage: KeyValueStorage | undefined): storage is KeyValueStorage {
+  if (!storage) return false;
+  const probe = "ltk-stream-status:probe";
+  try {
+    storage.setItem(probe, "1");
+    storage.removeItem?.(probe);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// ヘルプを自動で表示するか（AC-77〜79）。保存領域が使えて、まだ閉じた記録がないときだけ true
+export function shouldAutoShowHelp(storage = browserStorage()): boolean {
+  if (!canUseStorage(storage)) return false;
+  try {
+    return storage.getItem(HELP_SEEN_KEY) === null;
+  } catch {
+    return false;
+  }
+}
+
+// ヘルプを閉じた記録。内容のバージョンは持たない（AC-80）
+export function markHelpSeen(storage = browserStorage()): void {
+  writeItem(HELP_SEEN_KEY, "1", storage);
 }

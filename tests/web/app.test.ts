@@ -153,7 +153,7 @@ describe("詳細フィルタの組み込み（AC-33〜35）", () => {
       .querySelector("input")!;
     box.click();
 
-    expect(root.querySelector(".player-card")).toBeNull();
+    expect(root.querySelector(".teams .player-card")).toBeNull();
     expect(root.querySelector(".hidden-count")?.textContent).toBe("1人を非表示");
     expect(localStorage.getItem("ltk-stream-status:hidden-players:v1")).toBe('["a:選手1"]');
   });
@@ -161,11 +161,11 @@ describe("詳細フィルタの組み込み（AC-33〜35）", () => {
   it("保存済みの設定を読み込んで適用し、簡易絞り込みの「解除」では戻らない", async () => {
     localStorage.setItem("ltk-stream-status:hidden-players:v1", '["a:選手1","a:いない人"]');
     const root = await start(async () => siteData(T0));
-    expect(root.querySelector(".player-card")).toBeNull();
+    expect(root.querySelector(".teams .player-card")).toBeNull();
     expect(root.querySelector(".hidden-count")?.textContent).toBe("1人を非表示");
 
     root.querySelector<HTMLButtonElement>("button.reset")!.click();
-    expect(root.querySelector(".player-card")).toBeNull();
+    expect(root.querySelector(".teams .player-card")).toBeNull();
   });
 });
 
@@ -229,6 +229,33 @@ describe("本戦の案内（AC-46, AC-48, AC-49）", () => {
   it("日程がなければ何も出さない", async () => {
     const root = await start(async () => siteData(T0));
     expect(root.querySelector(".notice-slot")?.childElementCount).toBe(0);
+  });
+});
+
+describe("ヘルプ（AC-77〜89）", () => {
+  it("更新履歴が 0 件でもヘルプのボタンが常に出る", async () => {
+    const root = await start(async () => siteData(T0));
+    expect(root.querySelector(".changelog-button")).toBeNull();
+    expect(root.querySelector(".help-button")?.getAttribute("aria-label")).toBe("ヘルプ");
+  });
+
+  it("初めての訪問では自動で開き、閉じると記録して次回は開かない", async () => {
+    const root = await start(async () => siteData(T0));
+    const dialog = root.querySelector<HTMLDialogElement>("dialog.help")!;
+    expect(dialog.open).toBe(true);
+    dialog.querySelector<HTMLButtonElement>(".help-close")!.click();
+    expect(localStorage.getItem("ltk-stream-status:help-seen:v1")).toBe("1");
+
+    const again = await start(async () => siteData(T0));
+    expect(again.querySelector<HTMLDialogElement>("dialog.help")!.open).toBe(false);
+  });
+
+  it("データを更新しても開いたモーダルが残る", async () => {
+    const root = await start(async () => siteData(T0));
+    const dialog = root.querySelector<HTMLDialogElement>("dialog.help")!;
+    await vi.advanceTimersByTimeAsync(RELOAD_INTERVAL_MS);
+    expect(root.querySelector("dialog.help")).toBe(dialog);
+    expect(dialog.open).toBe(true);
   });
 });
 

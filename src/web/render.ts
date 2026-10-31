@@ -122,7 +122,7 @@ function renderFavoriteButton(player: PlayerStatus, key: string, control: Favori
 }
 
 // 選手カード。配信の有無にかかわらず同じ構成・同じ大きさ（AC-5〜8, AC-22, AC-27, AC-42）
-function renderPlayerCard(player: PlayerStatus, teamId: string, control?: FavoriteControl): HTMLElement {
+export function renderPlayerCard(player: PlayerStatus, teamId: string, control?: FavoriteControl): HTMLElement {
   const live = isPlayerLive(player);
   return h(
     "article",
