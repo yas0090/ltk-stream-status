@@ -1317,10 +1317,10 @@ a {
   line-height: 1.6;
 }
 
-/* 日本語の改行は文節の区切りを優先し、禁則処理を厳しくする */
+/* 日本語の改行は標準の禁則処理に任せる。auto-phrase は語の途中のような位置で折れることがあったため使わない */
 .help-body {
-  word-break: auto-phrase;
-  line-break: strict;
+  word-break: normal;
+  line-break: normal;
 }
 
 .help-section + .help-section {
@@ -1340,6 +1340,14 @@ a {
   margin: 6px 0 0;
   overflow-wrap: break-word;
   text-wrap: pretty;
+}
+
+/* アイコンと文章の行は、狭い幅でも文章の列が細くなりすぎないよう、アイコンを上に回す */
+@media (max-width: 420px) {
+  .help-line {
+    flex-direction: column;
+    gap: 4px;
+  }
 }
 
 .help-line {
