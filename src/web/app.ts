@@ -7,6 +7,7 @@ import { renderChangelog } from "./changelog";
 import { renderDetailFilter } from "./detail-filter";
 import { externalLink, h } from "./dom";
 import { renderFilters, setHiddenCount } from "./filters";
+import { renderHelp } from "./help";
 import { renderNotice } from "./notice";
 import { renderFavorites, renderStaleWarning, renderTeams, renderUpdatedAt, type FavoriteControl } from "./render";
 import { loadFavorites, loadFilter, loadHiddenPlayers, saveFavorites, saveFilter, saveHiddenPlayers } from "./storage";
@@ -74,6 +75,9 @@ export function createApp(root: HTMLElement, { loadData, now = () => new Date() 
   const listSlot = h("main", { class: "list-slot" });
   const errorSlot = h("p", { class: "load-error", role: "alert", hidden: true });
 
+  // ヘルプはデータに依存しないので最初に 1 回だけ作る（再読み込みで開いたモーダルを消さない）
+  const help = renderHelp();
+
   // スクロールしても常に表示されるヘッダー（AC-38）
   root.replaceChildren(
     h(
@@ -83,14 +87,17 @@ export function createApp(root: HTMLElement, { loadData, now = () => new Date() 
         "header",
         { class: "site-header" },
         h("h1", { class: "site-title" }, "LTK4 Live Now"),
-        h("div", { class: "header-meta" }, updatedSlot, changelogSlot, renderThemeToggle()),
+        h("div", { class: "header-meta" }, updatedSlot, changelogSlot, help.button, renderThemeToggle()),
       ),
       staleSlot,
     ),
     h("div", { class: "page" }, errorSlot, noticeSlot, favoritesSlot, filtersSlot, listSlot, renderFooter()),
     detailSlot,
     changelogDialogSlot,
+    help.dialog,
   );
+  // 初めて訪れたときだけ開く。DOM に追加した後で呼ぶ
+  help.autoOpen();
 
   // 今のデータにいない選手のキーは表示の判定にも件数にも使わない（AC-37）
   const visibleHidden = () => (data ? pruneHidden(hiddenPlayers, data.teams) : new Set<string>());

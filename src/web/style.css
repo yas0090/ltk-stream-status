@@ -1263,3 +1263,129 @@ a {
     max-height: 85dvh;
   }
 }
+
+/* ヘルプのボタンとモーダル。更新履歴と同じ作り */
+.help-button {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.help {
+  width: min(560px, calc(100vw - 32px));
+  max-width: none;
+  max-height: min(80dvh, calc(100dvh - 32px));
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.help[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.help::backdrop {
+  background: rgb(0 0 0 / 45%);
+}
+
+.help-head {
+  padding: 16px 16px 8px;
+}
+
+.help-head h2 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.help-body {
+  min-height: 0;
+  padding: 8px 16px;
+  overflow-y: auto;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.help-section + .help-section {
+  margin-top: 16px;
+}
+
+.help-section h3 {
+  margin: 0 0 4px;
+  font-size: 0.9375rem;
+}
+
+.help-section p {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.help-line {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.help-line > span:last-child {
+  min-width: 0;
+}
+
+.help-icons {
+  display: inline-flex;
+  flex: none;
+  gap: 4px;
+  align-items: center;
+  min-width: 40px;
+  color: var(--text-muted);
+}
+
+.help-icons svg {
+  width: 18px;
+  height: 18px;
+}
+
+.help-icons .star-icon:last-child {
+  color: #f5b301;
+}
+
+.help-live {
+  position: static;
+  flex: none;
+  transform: none;
+}
+
+.help-foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.help-close {
+  padding: 6px 16px;
+  border: 1px solid var(--text);
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--surface);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+@media (max-width: 719px) {
+  .help {
+    width: calc(100vw - 24px);
+    max-height: 85dvh;
+  }
+}

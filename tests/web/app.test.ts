@@ -232,6 +232,33 @@ describe("本戦の案内（AC-46, AC-48, AC-49）", () => {
   });
 });
 
+describe("ヘルプ（AC-77〜89）", () => {
+  it("更新履歴が 0 件でもヘルプのボタンが常に出る", async () => {
+    const root = await start(async () => siteData(T0));
+    expect(root.querySelector(".changelog-button")).toBeNull();
+    expect(root.querySelector(".help-button")?.getAttribute("aria-label")).toBe("ヘルプ");
+  });
+
+  it("初めての訪問では自動で開き、閉じると記録して次回は開かない", async () => {
+    const root = await start(async () => siteData(T0));
+    const dialog = root.querySelector<HTMLDialogElement>("dialog.help")!;
+    expect(dialog.open).toBe(true);
+    dialog.querySelector<HTMLButtonElement>(".help-close")!.click();
+    expect(localStorage.getItem("ltk-stream-status:help-seen:v1")).toBe("1");
+
+    const again = await start(async () => siteData(T0));
+    expect(again.querySelector<HTMLDialogElement>("dialog.help")!.open).toBe(false);
+  });
+
+  it("データを更新しても開いたモーダルが残る", async () => {
+    const root = await start(async () => siteData(T0));
+    const dialog = root.querySelector<HTMLDialogElement>("dialog.help")!;
+    await vi.advanceTimersByTimeAsync(RELOAD_INTERVAL_MS);
+    expect(root.querySelector("dialog.help")).toBe(dialog);
+    expect(dialog.open).toBe(true);
+  });
+});
+
 describe("fetchSiteData", () => {
   it("キャッシュを避けるためタイムスタンプ付きで読み込む", async () => {
     const fetchMock = vi.fn(async () => new Response(JSON.stringify(siteData(T0))));
