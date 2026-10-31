@@ -1,6 +1,7 @@
 import { isLtk } from "../shared/ltk";
 import { isOfficialWindow } from "../shared/schedule";
-import { toMatches, type ChannelInput, type KeywordsFile, type ScheduleFile, type TeamsFile } from "../shared/schema";
+import { sortChangelog } from "../shared/changelog";
+import { toMatches, type ChangelogFile, type ChannelInput, type KeywordsFile, type ScheduleFile, type TeamsFile } from "../shared/schema";
 import type { ChannelStatus, Schedule, SiteData } from "../shared/types";
 import { avatarsDue, planYouTube, type Budget, type YouTubePlan } from "./budget";
 import { initialState, withCurrentQuotaDay, type FetchState } from "./state";
@@ -24,6 +25,8 @@ export type GenerateOptions = {
   budget?: Budget;
   // 本戦の日程（AC-45）。なければ site-data.json に schedule を出さない
   schedule?: ScheduleFile;
+  // 更新履歴。なければ site-data.json に changelog を出さない
+  changelog?: ChangelogFile;
 };
 
 export type GenerateResult = {
@@ -55,7 +58,7 @@ export async function generateSiteData(
   teams: TeamsFile,
   keywords: KeywordsFile,
   fetchers: Fetchers,
-  { now = new Date(), previousState, budget, schedule }: GenerateOptions = {},
+  { now = new Date(), previousState, budget, schedule, changelog }: GenerateOptions = {},
 ): Promise<GenerateResult> {
   const channels = allChannels(teams);
   // 公式チャンネルは本戦の日だけ、選手と同じ取得に加える（AC-47）
@@ -166,6 +169,8 @@ export async function generateSiteData(
     };
     siteData.schedule = result;
   }
+
+  if (changelog) siteData.changelog = sortChangelog(changelog.entries);
 
   const usage = fetchers.youtubeUsage?.() ?? { used: 0, exceeded: false };
   const nowIso = now.toISOString();

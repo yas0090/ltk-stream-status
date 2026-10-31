@@ -2,6 +2,7 @@ import { buildView, EMPTY_FILTER, type Filter } from "../shared/filter";
 import { pruneHidden } from "../shared/hidden";
 import { pickNotice } from "../shared/schedule";
 import type { SiteData } from "../shared/types";
+import { renderChangelog } from "./changelog";
 import { renderDetailFilter } from "./detail-filter";
 import { externalLink, h } from "./dom";
 import { renderFilters, setHiddenCount } from "./filters";
@@ -57,7 +58,10 @@ export function createApp(root: HTMLElement, { loadData, now = () => new Date() 
   let hiddenPlayers: ReadonlySet<string> = loadHiddenPlayers();
   let teamsKey = "";
   let filtersForm: HTMLFormElement | undefined;
+  let changelogKey: string | undefined;
 
+  const changelogSlot = h("div", { class: "changelog-slot" });
+  const changelogDialogSlot = h("div", { class: "changelog-dialog-slot" });
   const updatedSlot = h("div", { class: "updated-slot" });
   const staleSlot = h("div", { class: "stale-slot" });
   const noticeSlot = h("div", { class: "notice-slot" });
@@ -75,12 +79,13 @@ export function createApp(root: HTMLElement, { loadData, now = () => new Date() 
         "header",
         { class: "site-header" },
         h("h1", { class: "site-title" }, "LTK4 Live Now"),
-        h("div", { class: "header-meta" }, updatedSlot, renderThemeToggle()),
+        h("div", { class: "header-meta" }, updatedSlot, changelogSlot, renderThemeToggle()),
       ),
       staleSlot,
     ),
     h("div", { class: "page" }, errorSlot, noticeSlot, filtersSlot, listSlot, renderFooter()),
     detailSlot,
+    changelogDialogSlot,
   );
 
   // 今のデータにいない選手のキーは表示の判定にも件数にも使わない（AC-37）
@@ -129,6 +134,18 @@ export function createApp(root: HTMLElement, { loadData, now = () => new Date() 
     filtersSlot.replaceChildren(filtersForm);
   };
 
+  // 内容が変わったときだけ作り直す（開いているモーダルを閉じないため）
+  const renderChangelogIfChanged = () => {
+    if (!data) return;
+    const entries = data.changelog ?? [];
+    const key = JSON.stringify(entries);
+    if (key === changelogKey) return;
+    changelogKey = key;
+    const changelog = renderChangelog(entries);
+    changelogSlot.replaceChildren(changelog?.button ?? "");
+    changelogDialogSlot.replaceChildren(changelog?.dialog ?? "");
+  };
+
   const reload = async () => {
     try {
       data = await loadData();
@@ -141,6 +158,7 @@ export function createApp(root: HTMLElement, { loadData, now = () => new Date() 
       errorSlot.hidden = false;
     }
     renderFiltersIfChanged();
+    renderChangelogIfChanged();
     renderStatus();
     renderList();
   };
