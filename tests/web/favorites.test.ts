@@ -61,7 +61,7 @@ describe("星ボタンとお気に入り欄の描画（AC-64〜70）", () => {
   it("欄は登録順に並び、その選手のチームカラーで出す（AC-68, AC-69）", () => {
     const favorites = ["b:B の人", "a:選手2"];
     const section = renderFavorites(favoritePlayers(favorites, teams), { favorites, onToggle: noop })!;
-    expect(section.querySelector("h2")?.textContent).toBe("お気に入り");
+    expect(section.querySelector("h2")?.textContent).toBe("FAVORITES");
     expect([...section.querySelectorAll(".player-name")].map((el) => el.textContent)).toEqual(["B の人", "選手2"]);
     expect([...section.querySelectorAll(".fav-item")].map((el) => el.getAttribute("style"))).toEqual([
       "--team-color: #D10015",

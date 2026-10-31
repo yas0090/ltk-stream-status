@@ -190,7 +190,7 @@ export function renderFavorites(entries: readonly FavoritePlayer[], control: Fav
   return h(
     "section",
     { class: "favorites", "aria-labelledby": "favorites-title" },
-    h("h2", { id: "favorites-title", class: "favorites-title" }, starIcon(true), "お気に入り"),
+    h("h2", { id: "favorites-title", class: "favorites-title" }, starIcon(true), "FAVORITES"),
     h(
       "div",
       { class: "favorites-list" },
