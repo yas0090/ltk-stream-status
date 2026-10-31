@@ -776,20 +776,37 @@ a {
   height: 20px;
 }
 
-/* お気に入り欄: フィルタの下、チーム一覧の上（AC-67）。カードは一覧と同じ構成で、チームカラーはカードごとに持つ */
+/* お気に入り欄: フィルタの下、チーム一覧の上（AC-67）。チームカードと同じ「カード」に選手カードをまとめて入れる。
+   カードの色は特定のチームでなく星と同じ色にする。選手カードのチームカラーは .fav-item が持つ */
 .favorites {
+  --fav-color: #f5b301;
+  overflow: hidden;
   margin-bottom: 16px;
+  border: 2px solid var(--fav-color);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--fav-color) 5%, var(--surface));
 }
 
 .favorites-title {
-  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 16px;
+  background: var(--fav-color);
+  color: #1f1f1f;
   font-size: 1.125rem;
+}
+
+.favorites-title .star-icon {
+  flex: none;
 }
 
 .favorites-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 8px;
+  padding: 12px 16px 16px;
 }
 
 .fav-item {

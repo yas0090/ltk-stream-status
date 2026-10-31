@@ -184,13 +184,13 @@ export function renderTeams(view: readonly TeamView[], control?: FavoriteControl
   return h("div", { class: "teams" }, view.map((team) => renderTeam(team, control)));
 }
 
-// お気に入り欄（AC-67〜70）。登録順に並べ、絞り込みの影響を受けない。0 人のときは作らない
+// お気に入り欄（AC-67〜70）。チームカードと同じ作りの「お気に入りカード」に選手カードを集める。登録順に並べ、絞り込みの影響を受けない。0 人のときは作らない
 export function renderFavorites(entries: readonly FavoritePlayer[], control: FavoriteControl): HTMLElement | null {
   if (entries.length === 0) return null;
   return h(
     "section",
     { class: "favorites", "aria-labelledby": "favorites-title" },
-    h("h2", { id: "favorites-title", class: "favorites-title" }, "お気に入り"),
+    h("h2", { id: "favorites-title", class: "favorites-title" }, starIcon(true), "お気に入り"),
     h(
       "div",
       { class: "favorites-list" },
