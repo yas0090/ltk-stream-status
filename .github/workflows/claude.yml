@@ -2,6 +2,7 @@ name: claude
 
 # Issue に claude ラベルを付けるか、claude ラベル付きの Issue に @claude とコメントすると、
 # Claude が計画を示し、承認されると実装して PR を作る（docs/specs/claude-github-actions/）
+# PR に @claude とコメントすると、その PR のブランチに修正を積む（#31）
 on:
   issues:
     types: [labeled]
@@ -21,14 +22,14 @@ concurrency:
 
 jobs:
   claude:
-    # 持ち主の操作だけで動かす（AC-12）。PR へのコメントは対象外
+    # 持ち主の操作だけで動かす（AC-12）。PR には claude ラベルが付かないので、ラベルは Issue でだけ確かめる
     if: >-
       github.actor == github.repository_owner && (
         (github.event_name == 'issues' && github.event.label.name == 'claude') ||
         (github.event_name == 'issue_comment' &&
-          !github.event.issue.pull_request &&
           contains(github.event.comment.body, '@claude') &&
-          contains(github.event.issue.labels.*.name, 'claude'))
+          (github.event.issue.pull_request ||
+            contains(github.event.issue.labels.*.name, 'claude')))
       )
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -59,7 +60,7 @@ jobs:
           # 拒否されたコマンドなどを実行結果のページで見られるようにする（秘密情報は伏せ字になる）
           display_report: true
 
-      # 進み具合のコメントは失敗時の表示が保証されないので、別に知らせる（AC-15）
+      # 進み具合のコメントは失敗時の表示が保証されないので、別に知らせる（AC-15）。PR でも同じコマンドで書ける
       - name: Report failure
         if: failure() || cancelled()
         run: |

@@ -7,9 +7,10 @@ Issue: #4 / 要件: [requirements.md](requirements.md)
 ```
 持ち主が Issue に claude ラベルを付ける ─┐
 持ち主が Issue に @claude とコメントする ─┤
+持ち主が PR に @claude とコメントする ────┤（#31）
                                           ▼
         .github/workflows/claude.yml（GitHub Actions）
-          1. 持ち主か、claude ラベル付きの Issue か、PR でないかを確かめる
+          1. 持ち主か、claude ラベル付きの Issue か PR へのコメントかを確かめる
           2. Node を用意し npm ci
           3. anthropics/claude-code-action@v1 を動かす
              - Issue 本文とコメントを読み、CLAUDE.md の手順に従って今の段階を判断する
@@ -39,7 +40,8 @@ Claude は実行のたびに新しく起動し、前回の会話を覚えてい�
 | `claude` ラベルが付いた（`spec` あり） | 要件をコメントする |
 | `@claude 承認` のコメント（`spec` なし） | 実装して PR を作る |
 | `@claude 承認` のコメント（`spec` あり） | 要件 → 設計 → タスクの次の段階をコメントする。タスクが承認されたら実装して PR を作る |
-| `@claude` を含む、承認以外のコメント | 修正依頼として、直したものをコメントする。質問なら答える |
+| Issue への、`@claude` を含む承認以外のコメント | 修正依頼として、直したものをコメントする。質問なら答える |
+| PR への `@claude` を含むコメント | 承認を待たずに PR のブランチで直して push し、変えた内容をコメントする。仕様に関わる大きな変更なら直さず、Issue で相談するよう返す（AC-17, 18） |
 | 内容があいまい | 推測せず、質問をコメントする |
 
 - **承認の見分け方**: コメントが `@claude 承認` で始まるときだけ承認とする。それ以外はすべて修正依頼や質問として扱い、実装を始めない（AC-4）。決まった言葉にするのは、あいまいな返事で意図せず実装が始まるのを防ぐため
@@ -62,7 +64,16 @@ on:
 
 - 操作した人が持ち主（`github.actor == github.repository_owner`）
 - ラベルの操作なら、付けたラベルが `claude`
-- コメントなら、`@claude` を含み、Issue に `claude` ラベルが付いていて、PR へのコメントではない（`!github.event.issue.pull_request`。PR 上での応答は対象外）
+- コメントなら、`@claude` を含み、Issue に `claude` ラベルが付いているか、PR へのコメント（`github.event.issue.pull_request`）である。PR には `claude` ラベルが付かないので、ラベルは Issue でだけ確かめる（2026-10-31 変更、#31）
+
+### PR での修正（AC-17〜19、#31）
+
+claude-code-action は、Issue へのコメントで動くと毎回 main から新しいブランチを作る。#23 では、PR を作った後に Issue で修正を頼んだところ別のブランチができ、手で取り込んだ。PR へのコメントで動いたときは PR のブランチを取ってきて、そこに push するので、PR を作った後の修正は PR へのコメントで頼む。
+
+- 運用: 計画・仕様の議論と最初の実装は Issue、実装後の修正の依頼は PR に書く。どう直すかを Issue で詰めたときも、依頼は PR に書く（CLAUDE.md に書く）
+- 対象は PR への通常のコメント（`issue_comment`）だけにする。差分の行へのレビューコメント（`pull_request_review_comment`）は対象外
+- push は Claude GitHub App のトークン（OIDC で取得）で行う。GITHUB_TOKEN での push と違い、後続のワークフローが動く見込み（AC-19。マージ後に確かめる）
+- 失敗時のコメント（`gh issue comment`）と `concurrency` の番号は、PR でもそのまま使える
 
 claude-code-action も既定で書き込み権限のない人を拒否するが、コラボレーターを将来追加したときにも持ち主だけに絞れるよう、ワークフロー側でも確かめる。
 
@@ -165,3 +176,6 @@ on:
 | AC-12 | 別アカウント（またはワークフローの条件の確認）で、持ち主以外では動かない |
 | AC-13 | 実行ログ・コメント・PR・プレビューに秘密情報がない（deploy.yml と同じ grep をプレビューにも入れる） |
 | AC-15 | わざと失敗させ（例: トークンを外す）、失敗のコメントが付く |
+| AC-17, 18 | Claude の PR に `@claude` で修正を頼み、同じブランチにコミットが積まれ、変えた内容がコメントされる |
+| AC-19 | 上の push で、test.yml と preview.yml が動く |
+| AC-20 | Issue での計画・承認が今までどおり動く |
