@@ -114,11 +114,11 @@ describe("お気に入りの組み込み（AC-67〜76）", () => {
     expect(root.querySelector(".favorites")).toBeNull();
   });
 
-  it("一覧の星で登録すると、フィルタの下・一覧の上に欄が出て、一覧にも残る（AC-67, AC-71）", async () => {
+  it("一覧の星で登録すると、フィルタの上に欄が出て、一覧にも残る（AC-67, AC-71）", async () => {
     const root = await start();
     listButton(root, "a:選手1").click();
-    expect(root.querySelector(".filters-slot + .favorites-slot .favorites")).not.toBeNull();
-    expect(root.querySelector(".favorites-slot + .list-slot")).not.toBeNull();
+    expect(root.querySelector(".favorites-slot .favorites")).not.toBeNull();
+    expect(root.querySelector(".favorites-slot + .filters-slot + .list-slot")).not.toBeNull();
     expect(favNames(root)).toEqual(["選手1"]);
     expect(listButton(root, "a:選手1").getAttribute("aria-pressed")).toBe("true");
     expect(root.querySelectorAll(".list-slot .player-card")).toHaveLength(3);

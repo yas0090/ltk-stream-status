@@ -220,7 +220,7 @@ describe("本戦の案内（AC-46, AC-48, AC-49）", () => {
     const root = await start(async () => withSchedule());
     const notice = () => root.querySelector(".notice-slot .match-notice");
     expect(notice()?.classList.contains("match-notice--next")).toBe(true);
-    expect(root.querySelector(".notice-slot + .filters-slot")).not.toBeNull();
+    expect(root.querySelector(".notice-slot + .favorites-slot + .filters-slot")).not.toBeNull();
 
     await vi.advanceTimersByTimeAsync(60_000);
     expect(notice()?.classList.contains("match-notice--today")).toBe(true);

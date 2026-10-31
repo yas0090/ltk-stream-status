@@ -87,7 +87,7 @@ export function createApp(root: HTMLElement, { loadData, now = () => new Date() 
       ),
       staleSlot,
     ),
-    h("div", { class: "page" }, errorSlot, noticeSlot, filtersSlot, favoritesSlot, listSlot, renderFooter()),
+    h("div", { class: "page" }, errorSlot, noticeSlot, favoritesSlot, filtersSlot, listSlot, renderFooter()),
     detailSlot,
     changelogDialogSlot,
   );
