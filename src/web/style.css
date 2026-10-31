@@ -19,6 +19,8 @@
   --error: #ce2c31;
   --chip-checked-bg: #1c2024;
   --chip-checked-text: #ffffff;
+  /* お気に入りカードの枠と見出し。星の色の系統で、チームカラーより控えめな金色 */
+  --favorite: #a07a1f;
 }
 
 :root[data-theme="dark"] {
@@ -40,6 +42,7 @@
   --error: #ff6369;
   --chip-checked-bg: #edeef0;
   --chip-checked-text: #111113;
+  --favorite: #8a6a1c;
 }
 
 *,
@@ -776,15 +779,15 @@ a {
   height: 20px;
 }
 
-/* お気に入り欄: フィルタの下、チーム一覧の上（AC-67）。チームカードと同じ「カード」に選手カードをまとめて入れる。
-   カードの色は特定のチームでなく星と同じ色にする。選手カードのチームカラーは .fav-item が持つ */
+/* お気に入り欄: フィルタの上（AC-67）。大枠の中に見出しと選手カードをまとめて入れる。
+   チームカードと見分けられるよう、見出しは帯で塗らず、枠と文字を星の系統の控えめな金色にする。選手カードのチームカラーは .fav-item が持つ */
 .favorites {
-  --fav-color: #f5b301;
   overflow: hidden;
-  margin-bottom: 16px;
-  border: 2px solid var(--fav-color);
+  /* フィルタとチーム一覧から離して、別の欄だと分かるようにする */
+  margin-bottom: 32px;
+  border: 2px solid var(--favorite);
   border-radius: 12px;
-  background: color-mix(in srgb, var(--fav-color) 5%, var(--surface));
+  background: var(--surface);
 }
 
 .favorites-title {
@@ -792,14 +795,15 @@ a {
   align-items: center;
   gap: 6px;
   margin: 0;
-  padding: 8px 16px;
-  background: var(--fav-color);
-  color: #1f1f1f;
+  padding: 12px 16px 0;
+  /* 金色に文字色を混ぜ、ライトでもダークでも読めるようにする */
+  color: color-mix(in srgb, var(--favorite) 75%, var(--text));
   font-size: 1.125rem;
 }
 
 .favorites-title .star-icon {
   flex: none;
+  color: #f5b301;
 }
 
 .favorites-list {
@@ -822,6 +826,10 @@ a {
 }
 
 @media (max-width: 719px) {
+  .favorites-title {
+    padding: 12px 12px 0;
+  }
+
   .favorites-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
