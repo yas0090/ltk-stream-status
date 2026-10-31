@@ -483,6 +483,19 @@ type Schedule = {
 - 5 分ごとの再読み込みでは、`changelog` の内容のキーが変わったときだけ作り直す（開いているモーダルを閉じないため）
 - 採用しなかった案: `changelog.yaml` を静的ファイルとして配信しブラウザが別に取得する（検証を通らずに公開される）、ビルド時に HTML へ埋め込む（`site-data.json` の流れと別の仕組みになる）
 
+## お気に入り選手（AC-64〜76、2026-10-31 追加、#23）
+
+- 状態は `favorites: string[]`（`playerKey` の登録順）。`src/web/app.ts` が持ち、切り替えのたびに `saveFavorites` で保存する
+- 純粋関数は `src/shared/favorites.ts`: `toggleFavorite`（なければ末尾に追加、あれば除く）、`pruneFavorites`（今のデータにいない選手と重複を除く。順序は保つ）、`favoritePlayers`（登録順に `{team, player, key}` を返す）
+- 保存は `src/web/storage.ts` の `loadFavorites` / `saveFavorites`（キー `ltk-stream-status:favorites:v1`）。非表示の保存と同じく `readItem` / `writeItem` を使い、形式違い・例外は空配列。登録順を保つため並べ替えない。保存領域が使えなくても、メモリ上の `favorites` で動き続ける
+- 星ボタンは `<button type="button" class="fav-btn" aria-pressed>`。ラベルは状態で変えず `<選手名> のお気に入り`。選手カードの名前の行の右端に置く。アイコンは `icons.ts` の `starIcon`（輪郭／塗りつぶし）
+- お気に入り欄 `renderFavorites`（`render.ts`）は `<section class="favorites">` に見出しと登録順のカードを並べる。0 人なら作らない。各カードは `--team-color` をその選手のチームの色にした `.fav-item` に入れ、一覧と同じ `renderPlayerCard` を使う
+- 欄は `data.teams` と `favorites` だけから作り、`filter` と `hiddenPlayers` を使わない（AC-70）。一覧は今までどおり `buildView` で作るので、お気に入りの選手も残る（AC-71）
+- `favorites-slot` を `filters-slot` の前に置く（お知らせ・エラーの後）。切り替えで欄と一覧の両方を描き直し、5 分ごとの再読み込みでも両方を描き直す。フィルタ操作では欄に触れない
+- 再読み込みのたびに `pruneFavorites` を通し、元と違うときだけ保存へ書き戻す（AC-76）
+- 切り替えで DOM が作り直されるので、押した後は同じ `playerKey` のボタンへフォーカスを戻す（欄から外れたときは一覧側）
+- 採用しなかった案: `Set` + `sort` で保存する（登録順が失われる）、欄を `buildView` の結果に混ぜる（絞り込みの影響を受ける）
+
 ## ディレクトリ構成
 
 ```
@@ -535,4 +548,9 @@ tests/
 | AC-56〜57 | 単体テスト: `changelog.yaml` の検証（日付の形式・実在、種類、本文が空、定義外のキー）、`site-data.json` への出力 |
 | AC-58〜61 | 単体テスト: 並べ替え（新しい順、同じ日付はファイルの順）、モーダルの DOM と開閉、0 件でボタンなし、再読み込みで開いたまま |
 | AC-60, 62 | 手動確認: PR のプレビューで Esc、スクロール、スマートフォン幅のはみ出しを確かめる |
+| AC-64〜66 | 単体テスト: 星ボタンの有無、`aria-pressed` の true / false、押下でキーを渡して切り替わる |
+| AC-67〜69 | 単体テスト: 0 人で欄なし、1 人以上で欄あり（フィルタの前）、登録順、チームカラー、一覧と同じ構成 |
+| AC-70〜72 | 結合テスト: 簡易絞り込みでも欄に残る、一覧にも残る、どちらのボタンでも両方の表示が揃う、フォーカスが戻る |
+| AC-73〜76 | 単体テスト: 保存と読み込み（登録順・形式違い・例外）、`pruneFavorites`、ページを開き直しても残る、保存へ書き戻す、保存領域が例外でも切り替えられる |
+| AC-64, 67 | 手動確認: PR のプレビューで星の見た目、スマートフォン幅（360px）での欄の表示、キーボード操作を確かめる |
 | AC-26 | 結合テスト: ビルドした成果物に Secrets の値が含まれないことを grep で確かめる |

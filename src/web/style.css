@@ -19,6 +19,8 @@
   --error: #ce2c31;
   --chip-checked-bg: #1c2024;
   --chip-checked-text: #ffffff;
+  /* お気に入りカードの枠と見出し。星の色の系統で、チームカラーより控えめな金色 */
+  --favorite: #a07a1f;
 }
 
 :root[data-theme="dark"] {
@@ -40,6 +42,7 @@
   --error: #ff6369;
   --chip-checked-bg: #edeef0;
   --chip-checked-text: #111113;
+  --favorite: #8a6a1c;
 }
 
 *,
@@ -740,6 +743,96 @@ a {
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* お気に入りの星: 登録前は灰色の輪郭、登録後は塗りつぶし（AC-64） */
+.fav-btn {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: 0 -4px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.fav-btn:hover {
+  color: var(--text);
+}
+
+.fav-btn[aria-pressed="true"] {
+  color: #f5b301;
+}
+
+.fav-btn:focus-visible {
+  outline: 2px solid var(--team-color);
+  outline-offset: 1px;
+}
+
+.star-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* お気に入り欄: フィルタの上（AC-67）。大枠の中に見出しと選手カードをまとめて入れる。
+   チームカードと見分けられるよう、見出しは帯で塗らず、枠と文字を星の系統の控えめな金色にする。選手カードのチームカラーは .fav-item が持つ */
+.favorites {
+  overflow: hidden;
+  /* フィルタとチーム一覧から離して、別の欄だと分かるようにする */
+  margin-bottom: 32px;
+  border: 2px solid var(--favorite);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.favorites-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 12px 16px 0;
+  /* 金色に文字色を混ぜ、ライトでもダークでも読めるようにする */
+  color: color-mix(in srgb, var(--favorite) 75%, var(--text));
+  font-size: 1.125rem;
+}
+
+.favorites-title .star-icon {
+  flex: none;
+  color: #f5b301;
+}
+
+.favorites-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+  padding: 12px 16px 16px;
+}
+
+.fav-item {
+  --team-color: var(--text-muted);
+  --team-border: color-mix(in srgb, var(--team-color) 35%, var(--border));
+  --role-color: color-mix(in srgb, var(--team-color) 75%, var(--text));
+  min-width: 0;
+}
+
+/* 一覧の格子の外なので、ロール名は常に表示する */
+.fav-item .role {
+  display: inline-flex;
+}
+
+@media (max-width: 719px) {
+  .favorites-title {
+    padding: 12px 12px 0;
+  }
+
+  .favorites-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .role {

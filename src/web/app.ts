@@ -1,4 +1,5 @@
 import { buildView, EMPTY_FILTER, type Filter } from "../shared/filter";
+import { favoritePlayers, pruneFavorites, toggleFavorite } from "../shared/favorites";
 import { pruneHidden } from "../shared/hidden";
 import { pickNotice } from "../shared/schedule";
 import type { SiteData } from "../shared/types";
@@ -7,8 +8,8 @@ import { renderDetailFilter } from "./detail-filter";
 import { externalLink, h } from "./dom";
 import { renderFilters, setHiddenCount } from "./filters";
 import { renderNotice } from "./notice";
-import { renderStaleWarning, renderTeams, renderUpdatedAt } from "./render";
-import { loadFilter, loadHiddenPlayers, saveFilter, saveHiddenPlayers } from "./storage";
+import { renderFavorites, renderStaleWarning, renderTeams, renderUpdatedAt, type FavoriteControl } from "./render";
+import { loadFavorites, loadFilter, loadHiddenPlayers, saveFavorites, saveFilter, saveHiddenPlayers } from "./storage";
 import { renderThemeToggle } from "./theme";
 
 export const RELOAD_INTERVAL_MS = 5 * 60_000;
@@ -56,6 +57,8 @@ export function createApp(root: HTMLElement, { loadData, now = () => new Date() 
   let filter: Filter = EMPTY_FILTER;
   // 詳細フィルタで非表示にした選手（AC-34）。簡易絞り込みとは別に持ち、変更のたびに保存する
   let hiddenPlayers: ReadonlySet<string> = loadHiddenPlayers();
+  // お気に入りの選手のキー（登録順）。変更のたびに保存する（AC-73）
+  let favorites: readonly string[] = loadFavorites();
   let teamsKey = "";
   let filtersForm: HTMLFormElement | undefined;
   let changelogKey: string | undefined;
@@ -66,6 +69,7 @@ export function createApp(root: HTMLElement, { loadData, now = () => new Date() 
   const staleSlot = h("div", { class: "stale-slot" });
   const noticeSlot = h("div", { class: "notice-slot" });
   const filtersSlot = h("div", { class: "filters-slot" });
+  const favoritesSlot = h("div", { class: "favorites-slot" });
   const detailSlot = h("div", { class: "detail-slot" });
   const listSlot = h("main", { class: "list-slot" });
   const errorSlot = h("p", { class: "load-error", role: "alert", hidden: true });
@@ -83,7 +87,7 @@ export function createApp(root: HTMLElement, { loadData, now = () => new Date() 
       ),
       staleSlot,
     ),
-    h("div", { class: "page" }, errorSlot, noticeSlot, filtersSlot, listSlot, renderFooter()),
+    h("div", { class: "page" }, errorSlot, noticeSlot, favoritesSlot, filtersSlot, listSlot, renderFooter()),
     detailSlot,
     changelogDialogSlot,
   );
@@ -100,12 +104,45 @@ export function createApp(root: HTMLElement, { loadData, now = () => new Date() 
     noticeSlot.replaceChildren(notice && data.schedule ? renderNotice(notice, data.schedule, data.teams, now()) : "");
   };
 
+  const favoriteControl: FavoriteControl = {
+    get favorites() {
+      return favorites;
+    },
+    onToggle: (key) => toggleAndRender(key),
+  };
+
   const renderList = () => {
     if (!data) return;
     const hidden = visibleHidden();
-    listSlot.replaceChildren(renderTeams(buildView(data.teams, filter, hidden)));
+    listSlot.replaceChildren(renderTeams(buildView(data.teams, filter, hidden), favoriteControl));
     if (filtersForm) setHiddenCount(filtersForm, hidden.size);
   };
+
+  // お気に入り欄は、簡易絞り込みと非表示の影響を受けない。フィルタ操作では描き直さない（AC-70）
+  const renderFavoritesSlot = () => {
+    if (!data) return;
+    favoritesSlot.replaceChildren(renderFavorites(favoritePlayers(favorites, data.teams), favoriteControl) ?? "");
+  };
+
+  // 今のデータにいない選手は取り除き、変わったときだけ保存へ書き戻す（AC-76）
+  const pruneSavedFavorites = () => {
+    if (!data) return;
+    const next = pruneFavorites(favorites, data.teams);
+    if (next.length === favorites.length && next.every((key, i) => key === favorites[i])) return;
+    favorites = next;
+    saveFavorites(next);
+  };
+
+  // 切り替えで DOM が作り直されるので、キーボード操作のために同じ選手のボタンへフォーカスを戻す。
+  // 欄から外れたときは一覧側の同じ選手のボタンになる
+  function toggleAndRender(key: string) {
+    favorites = toggleFavorite(favorites, key);
+    saveFavorites(favorites);
+    renderFavoritesSlot();
+    renderList();
+    const buttons = [...root.querySelectorAll<HTMLButtonElement>(".fav-btn")];
+    buttons.find((button) => button.dataset.key === key)?.focus();
+  }
 
   // チーム構成が変わったときだけ絞り込み UI と詳細フィルタを作り直す（操作中のチェックを消さないため）
   const renderFiltersIfChanged = () => {
@@ -160,6 +197,8 @@ export function createApp(root: HTMLElement, { loadData, now = () => new Date() 
     renderFiltersIfChanged();
     renderChangelogIfChanged();
     renderStatus();
+    pruneSavedFavorites();
+    renderFavoritesSlot();
     renderList();
   };
 

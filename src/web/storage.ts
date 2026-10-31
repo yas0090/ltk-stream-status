@@ -5,6 +5,7 @@ import { TIERS, type Tier } from "../shared/types";
 type KeyValueStorage = Pick<Storage, "getItem" | "setItem">;
 
 export const HIDDEN_PLAYERS_KEY = "ltk-stream-status:hidden-players:v1";
+export const FAVORITES_KEY = "ltk-stream-status:favorites:v1";
 export const FILTER_KEY = "ltk-stream-status:filter:v1";
 
 // localStorage へのアクセス自体が例外を投げるブラウザがあるので、取得も try で囲む
@@ -48,6 +49,20 @@ export function saveHiddenPlayers(hidden: ReadonlySet<string>, storage = browser
 
 const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((item) => typeof item === "string");
+
+// お気に入りの選手のキー（AC-73〜75）。登録順を保つので並べ替えない。形式が違えば空として扱う
+export function loadFavorites(storage = browserStorage()): string[] {
+  try {
+    const value: unknown = JSON.parse(readItem(FAVORITES_KEY, storage) ?? "[]");
+    return isStringArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveFavorites(favorites: readonly string[], storage = browserStorage()): void {
+  writeItem(FAVORITES_KEY, JSON.stringify(favorites), storage);
+}
 
 // 簡易絞り込みの条件（AC-44）。項目ごとに検証し、形式が違う項目は未選択にする。今のデータにないチームは捨てる
 export function loadFilter(teamIds: readonly string[], storage = browserStorage()): Filter {
