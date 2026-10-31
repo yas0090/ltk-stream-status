@@ -108,7 +108,7 @@ export function createApp(root: HTMLElement, { loadData, now = () => new Date() 
     get favorites() {
       return favorites;
     },
-    onToggle: (key) => toggleAndRender(key),
+    onToggle: (key, button) => toggleAndRender(key, button),
   };
 
   const renderList = () => {
@@ -133,15 +133,18 @@ export function createApp(root: HTMLElement, { loadData, now = () => new Date() 
     saveFavorites(next);
   };
 
-  // 切り替えで DOM が作り直されるので、キーボード操作のために同じ選手のボタンへフォーカスを戻す。
-  // 欄から外れたときは一覧側の同じ選手のボタンになる
-  function toggleAndRender(key: string) {
+  // 切り替えで DOM が作り直されるので、キーボード操作のために押した側（欄か一覧）の同じ選手のボタンへフォーカスを戻す。
+  // 欄で解除したときは欄の同じ位置のボタンへ戻す。画面が飛ばないようスクロールさせない
+  function toggleAndRender(key: string, pressed: HTMLButtonElement) {
+    const slot = favoritesSlot.contains(pressed) ? favoritesSlot : listSlot;
+    const index = [...slot.querySelectorAll(".fav-btn")].indexOf(pressed);
     favorites = toggleFavorite(favorites, key);
     saveFavorites(favorites);
     renderFavoritesSlot();
     renderList();
-    const buttons = [...root.querySelectorAll<HTMLButtonElement>(".fav-btn")];
-    buttons.find((button) => button.dataset.key === key)?.focus();
+    const buttons = [...slot.querySelectorAll<HTMLButtonElement>(".fav-btn")];
+    const target = buttons.find((button) => button.dataset.key === key) ?? buttons[Math.min(index, buttons.length - 1)];
+    target?.focus({ preventScroll: true });
   }
 
   // チーム構成が変わったときだけ絞り込み UI と詳細フィルタを作り直す（操作中のチェックを消さないため）

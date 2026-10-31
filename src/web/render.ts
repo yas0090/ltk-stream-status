@@ -107,7 +107,7 @@ function renderThumb(player: PlayerStatus, live: boolean): HTMLElement {
 }
 
 // お気に入りの状態と、切り替えたときの処理（AC-64〜66）
-export type FavoriteControl = { favorites: readonly string[]; onToggle: (key: string) => void };
+export type FavoriteControl = { favorites: readonly string[]; onToggle: (key: string, button: HTMLButtonElement) => void };
 
 // 星のボタン。押した状態は aria-pressed で伝えるので、ラベルは状態で変えない（AC-66）
 function renderFavoriteButton(player: PlayerStatus, key: string, control: FavoriteControl): HTMLElement {
@@ -117,7 +117,7 @@ function renderFavoriteButton(player: PlayerStatus, key: string, control: Favori
     { type: "button", class: "fav-btn", "data-key": key, "aria-pressed": String(on), "aria-label": `${player.name} のお気に入り` },
     starIcon(on),
   );
-  button.addEventListener("click", () => control.onToggle(key));
+  button.addEventListener("click", () => control.onToggle(key, button as HTMLButtonElement));
   return button;
 }
 

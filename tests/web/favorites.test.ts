@@ -147,12 +147,24 @@ describe("お気に入りの組み込み（AC-67〜76）", () => {
     expect(favNames(root)).toEqual(["選手1"]);
   });
 
-  it("押した後、同じ選手のボタンにフォーカスが戻る。欄から外れたときは一覧側へ戻る", async () => {
+  it("一覧で押した後は欄へ移らず、一覧の同じ選手のボタンにフォーカスが戻り、スクロールさせない", async () => {
+    const root = await start();
+    const focus = vi.spyOn(HTMLElement.prototype, "focus");
+    listButton(root, "a:選手1").click();
+    expect(document.activeElement).toBe(listButton(root, "a:選手1"));
+    expect(focus).toHaveBeenLastCalledWith({ preventScroll: true });
+    focus.mockRestore();
+  });
+
+  it("欄で解除したときは一覧へ移らず、欄の同じ位置のボタンへ戻る", async () => {
     const root = await start();
     listButton(root, "a:選手1").click();
-    expect(document.activeElement).toBe(favButton(root, "a:選手1"));
+    listButton(root, "a:選手2").click();
     favButton(root, "a:選手1").click();
-    expect(document.activeElement).toBe(listButton(root, "a:選手1"));
+    expect(document.activeElement).toBe(favButton(root, "a:選手2"));
+    favButton(root, "a:選手2").click();
+    expect(root.querySelector(".favorites")).toBeNull();
+    expect(document.activeElement).not.toBe(listButton(root, "a:選手2"));
   });
 
   it("ページを開き直しても残る（AC-73）", async () => {
