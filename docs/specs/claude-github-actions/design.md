@@ -107,15 +107,16 @@ claude-code-action の進み具合のコメントは、失敗したときの表�
 ```yaml
 on:
   pull_request:
-    paths: ["src/web/**", "src/shared/**", "vite.config.ts"]
+    paths: ["src/web/**", "src/shared/**", "vite.config.ts", "data/changelog.yaml"]
 ```
 
-`data/` の変更は配信状態の取得（`npm run generate`）を通さないと画面に出ないため、プレビューの対象にしない。データの変更は本番に反映して確かめる。
+`data/` の変更は配信状態の取得（`npm run generate`）を通さないと画面に出ないため、プレビューの対象にしない。データの変更は本番に反映して確かめる。ただし更新履歴（`data/changelog.yaml`）は配信状態と関係なく差し替えられるので対象にする（#28）。
 
 1. `npm ci` → `npm run build`
 2. 本番の `site-data.json` を `PUBLIC_SITE_URL` から取って `dist/` に置く。配信状態の取得はしない（YouTube のクォータを使わないため）
-3. `wrangler pages deploy dist --branch=<PR のブランチ名>` で、本番とは別のプレビュー URL に出す（本番は `--branch=main` なので影響しない）
-4. URL を PR にコメントする。同じ PR では 1 つのコメントを更新する
+3. `npm run preview-data`（`src/fetch/preview-main.ts`）で、`dist/site-data.json` の `changelog` だけを PR の `data/changelog.yaml` の内容に差し替える。検証と並べ替えは取得処理と同じ `parseChangelogData`・`sortChangelog` を使い、形式が違えば失敗させる。ファイルの読み書きだけで API は呼ばない
+4. `wrangler pages deploy dist --branch=<PR のブランチ名>` で、本番とは別のプレビュー URL に出す（本番は `--branch=main` なので影響しない）
+5. URL を PR にコメントする。同じ PR では 1 つのコメントを更新する
 
 - Cloudflare のトークンは、デプロイのステップにだけ渡す（ビルド中のコードから読めないようにする）
 - フォークからの PR では Secret が渡らないので動かない。持ち主の PR だけが対象なので問題ない

@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "generate": "tsx src/fetch/main.ts"
+    "generate": "tsx src/fetch/main.ts",
+    "preview-data": "tsx src/fetch/preview-main.ts"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
