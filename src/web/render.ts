@@ -1,8 +1,10 @@
+import type { FavoritePlayer } from "../shared/favorites";
 import { hasLtkStream, isPlayerLive, type TeamView } from "../shared/filter";
+import { playerKey } from "../shared/hidden";
 import { isStale } from "../shared/stale";
 import { ROLES, type ChannelStatus, type Platform, type PlayerStatus, type Role } from "../shared/types";
 import { externalLink, h } from "./dom";
-import { platformIcon } from "./icons";
+import { platformIcon, starIcon } from "./icons";
 
 const PLATFORM_LABEL: Record<Platform, string> = { twitch: "Twitch", youtube: "YouTube" };
 
@@ -104,8 +106,23 @@ function renderThumb(player: PlayerStatus, live: boolean): HTMLElement {
   return thumb;
 }
 
+// お気に入りの状態と、切り替えたときの処理（AC-64〜66）
+export type FavoriteControl = { favorites: readonly string[]; onToggle: (key: string) => void };
+
+// 星のボタン。押した状態は aria-pressed で伝えるので、ラベルは状態で変えない（AC-66）
+function renderFavoriteButton(player: PlayerStatus, key: string, control: FavoriteControl): HTMLElement {
+  const on = control.favorites.includes(key);
+  const button = h(
+    "button",
+    { type: "button", class: "fav-btn", "data-key": key, "aria-pressed": String(on), "aria-label": `${player.name} のお気に入り` },
+    starIcon(on),
+  );
+  button.addEventListener("click", () => control.onToggle(key));
+  return button;
+}
+
 // 選手カード。配信の有無にかかわらず同じ構成・同じ大きさ（AC-5〜8, AC-22, AC-27, AC-42）
-function renderPlayerCard(player: PlayerStatus): HTMLElement {
+function renderPlayerCard(player: PlayerStatus, teamId: string, control?: FavoriteControl): HTMLElement {
   const live = isPlayerLive(player);
   return h(
     "article",
@@ -120,6 +137,7 @@ function renderPlayerCard(player: PlayerStatus): HTMLElement {
       h("span", { class: "avatar-wrap" }, renderAvatar(player), live && h("span", { class: "live-badge" }, "LIVE")),
       h("span", { class: "live-mark", role: "img", "aria-label": live ? "配信中" : "配信していない" }),
       h("span", { class: "player-name", title: player.name }, player.name),
+      control && renderFavoriteButton(player, playerKey(teamId, player.name), control),
     ),
     // ロール名はスマートフォンでだけ表示する（PC では列の見出しでわかる）
     h("div", { class: "platforms" }, player.channels.map(renderPlatformLink), h("span", { class: "role" }, roleIcon(player.role), player.role)),
@@ -128,7 +146,7 @@ function renderPlayerCard(player: PlayerStatus): HTMLElement {
 }
 
 // チームのカード。PC ではロール（列）× 階級（行）の格子にし、該当者のいないマスは空欄にする
-function renderTeam(team: TeamView): HTMLElement {
+function renderTeam(team: TeamView, control?: FavoriteControl): HTMLElement {
   return h(
     "section",
     // チームカラーは検証済みの #RRGGBB なので、そのまま CSS 変数に渡せる（AC-28）
@@ -150,7 +168,7 @@ function renderTeam(team: TeamView): HTMLElement {
           h("h3", { class: "tier-name" }, group.tier),
           ROLES.map((role) => {
             const player = group.players.find((p) => p.role === role);
-            return player ? renderPlayerCard(player) : h("div", { class: "slot-empty", "data-role": role });
+            return player ? renderPlayerCard(player, team.id, control) : h("div", { class: "slot-empty", "data-role": role });
           }),
         ),
       ),
@@ -159,9 +177,31 @@ function renderTeam(team: TeamView): HTMLElement {
 }
 
 // チーム → 階級 → ロールの一覧（AC-1〜8, AC-18, AC-22, AC-27）
-export function renderTeams(view: readonly TeamView[]): HTMLElement {
+export function renderTeams(view: readonly TeamView[], control?: FavoriteControl): HTMLElement {
   if (view.length === 0) {
     return h("p", { class: "empty" }, "条件に当てはまる出場者はいません。");
   }
-  return h("div", { class: "teams" }, view.map(renderTeam));
+  return h("div", { class: "teams" }, view.map((team) => renderTeam(team, control)));
+}
+
+// お気に入り欄（AC-67〜70）。登録順に並べ、絞り込みの影響を受けない。0 人のときは作らない
+export function renderFavorites(entries: readonly FavoritePlayer[], control: FavoriteControl): HTMLElement | null {
+  if (entries.length === 0) return null;
+  return h(
+    "section",
+    { class: "favorites", "aria-labelledby": "favorites-title" },
+    h("h2", { id: "favorites-title", class: "favorites-title" }, "お気に入り"),
+    h(
+      "div",
+      { class: "favorites-list" },
+      // チームカラーは検証済みの #RRGGBB なので、そのまま CSS 変数に渡せる（AC-28）
+      entries.map(({ team, player }) =>
+        h(
+          "div",
+          { class: "fav-item", "data-team": team.id, style: `--team-color: ${team.color}` },
+          renderPlayerCard(player, team.id, control),
+        ),
+      ),
+    ),
+  );
 }

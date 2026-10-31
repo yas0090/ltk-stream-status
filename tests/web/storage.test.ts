@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_FILTER } from "../../src/shared/filter";
 import {
+  FAVORITES_KEY,
   FILTER_KEY,
   HIDDEN_PLAYERS_KEY,
+  loadFavorites,
   loadFilter,
   loadHiddenPlayers,
   readItem,
+  saveFavorites,
   saveFilter,
   saveHiddenPlayers,
   writeItem,
@@ -55,6 +58,28 @@ describe("詳細フィルタの保存と読み込み（AC-34, AC-36）", () => {
   it("保存領域がない環境でも動く", () => {
     expect(readItem("k", undefined)).toBeNull();
     expect(() => writeItem("k", "v", undefined)).not.toThrow();
+  });
+});
+
+describe("お気に入りの保存と読み込み（AC-73〜75）", () => {
+  it("保存して読み込むと、登録順のまま元に戻る", () => {
+    const storage = memoryStorage();
+    saveFavorites(["b:y", "a:x", "a:w"], storage);
+    expect(storage.data.get(FAVORITES_KEY)).toBe('["b:y","a:x","a:w"]');
+    expect(loadFavorites(storage)).toEqual(["b:y", "a:x", "a:w"]);
+  });
+
+  it("何も保存されていなければ空", () => {
+    expect(loadFavorites(memoryStorage())).toEqual([]);
+  });
+
+  it.each(["not json", '{"a":1}', "[1,2]", '"a:x"', "null"])("形式が違う値（%s）は空として扱う", (value) => {
+    expect(loadFavorites(memoryStorage({ [FAVORITES_KEY]: value }))).toEqual([]);
+  });
+
+  it("保存領域が例外を投げても、例外を外に出さない（AC-74）", () => {
+    expect(loadFavorites(throwingStorage)).toEqual([]);
+    expect(() => saveFavorites(["a:x"], throwingStorage)).not.toThrow();
   });
 });
 

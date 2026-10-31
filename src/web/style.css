@@ -742,6 +742,74 @@ a {
   white-space: nowrap;
 }
 
+/* お気に入りの星: 登録前は灰色の輪郭、登録後は塗りつぶし（AC-64） */
+.fav-btn {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: 0 -4px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.fav-btn:hover {
+  color: var(--text);
+}
+
+.fav-btn[aria-pressed="true"] {
+  color: #f5b301;
+}
+
+.fav-btn:focus-visible {
+  outline: 2px solid var(--team-color);
+  outline-offset: 1px;
+}
+
+.star-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* お気に入り欄: フィルタの下、チーム一覧の上（AC-67）。カードは一覧と同じ構成で、チームカラーはカードごとに持つ */
+.favorites {
+  margin-bottom: 16px;
+}
+
+.favorites-title {
+  margin: 0 0 8px;
+  font-size: 1.125rem;
+}
+
+.favorites-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.fav-item {
+  --team-color: var(--text-muted);
+  --team-border: color-mix(in srgb, var(--team-color) 35%, var(--border));
+  --role-color: color-mix(in srgb, var(--team-color) 75%, var(--text));
+  min-width: 0;
+}
+
+/* 一覧の格子の外なので、ロール名は常に表示する */
+.fav-item .role {
+  display: inline-flex;
+}
+
+@media (max-width: 719px) {
+  .favorites-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .role {
   display: none;
   flex: none;

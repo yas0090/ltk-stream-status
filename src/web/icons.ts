@@ -10,6 +10,24 @@ const PATHS: Record<Platform, string[]> = {
   ],
 };
 
+const STAR_PATH = "M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96Z";
+
+// お気に入りの星。お気に入りは塗りつぶし、そうでなければ輪郭だけ（色は CSS の currentColor）
+export function starIcon(filled: boolean): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("class", "star-icon");
+  const path = document.createElementNS(SVG_NS, "path");
+  path.setAttribute("d", STAR_PATH);
+  path.setAttribute("fill", filled ? "currentColor" : "none");
+  path.setAttribute("stroke", "currentColor");
+  path.setAttribute("stroke-width", "2");
+  path.setAttribute("stroke-linejoin", "round");
+  svg.append(path);
+  return svg;
+}
+
 export function platformIcon(platform: Platform): SVGSVGElement {
   const svg = document.createElementNS(SVG_NS, "svg");
   svg.setAttribute("viewBox", "0 0 24 24");
