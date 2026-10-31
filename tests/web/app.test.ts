@@ -153,7 +153,7 @@ describe("詳細フィルタの組み込み（AC-33〜35）", () => {
       .querySelector("input")!;
     box.click();
 
-    expect(root.querySelector(".player-card")).toBeNull();
+    expect(root.querySelector(".teams .player-card")).toBeNull();
     expect(root.querySelector(".hidden-count")?.textContent).toBe("1人を非表示");
     expect(localStorage.getItem("ltk-stream-status:hidden-players:v1")).toBe('["a:選手1"]');
   });
@@ -161,11 +161,11 @@ describe("詳細フィルタの組み込み（AC-33〜35）", () => {
   it("保存済みの設定を読み込んで適用し、簡易絞り込みの「解除」では戻らない", async () => {
     localStorage.setItem("ltk-stream-status:hidden-players:v1", '["a:選手1","a:いない人"]');
     const root = await start(async () => siteData(T0));
-    expect(root.querySelector(".player-card")).toBeNull();
+    expect(root.querySelector(".teams .player-card")).toBeNull();
     expect(root.querySelector(".hidden-count")?.textContent).toBe("1人を非表示");
 
     root.querySelector<HTMLButtonElement>("button.reset")!.click();
-    expect(root.querySelector(".player-card")).toBeNull();
+    expect(root.querySelector(".teams .player-card")).toBeNull();
   });
 });
 

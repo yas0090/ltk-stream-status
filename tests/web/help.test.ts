@@ -94,7 +94,23 @@ describe("ヘルプのモーダル（AC-81〜89）", () => {
     ]);
     expect(dialog.querySelector(".live-badge")?.textContent).toBe("LIVE");
     expect(dialog.querySelectorAll(".star-icon").length).toBe(2);
-    expect(dialog.querySelectorAll(".platform-icon").length).toBe(2);
+    expect(dialog.querySelectorAll(".help-icons .platform-icon").length).toBe(2);
+  });
+
+  it("配信中の選手カードのサンプルが入り、サムネイルはサンプル画像で操作できない", () => {
+    const { dialog } = renderHelp(memoryStorage());
+    const card = dialog.querySelector(".help-sample .player-card");
+    expect(card?.getAttribute("data-live")).toBe("true");
+    expect(card?.hasAttribute("inert")).toBe(true);
+    expect(card?.querySelector<HTMLImageElement>(".thumb-img")?.src).toContain("data:image/svg+xml");
+    expect(card?.querySelector(".fav-btn")).toBeNull();
+  });
+
+  it("フィルタの説明が画面の名前と合っている", () => {
+    const { dialog } = renderHelp(memoryStorage());
+    const text = dialog.textContent ?? "";
+    for (const word of ["絞り込み", "配信中", "LTK", "解除", "詳細フィルタ"]) expect(text).toContain(word);
+    expect(text).not.toContain("簡易絞り込み");
   });
 
   it("閉じたときに記録する。表示しただけでは記録しない", () => {

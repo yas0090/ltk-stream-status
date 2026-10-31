@@ -1,6 +1,37 @@
 import { h } from "./dom";
 import { platformIcon, starIcon } from "./icons";
+import { renderPlayerCard } from "./render";
 import { markHelpSeen, shouldAutoShowHelp } from "./storage";
+
+// サンプルカードのサムネイル。外部に依存しないよう、画像はここに埋め込む
+const SAMPLE_THUMB =
+  "data:image/svg+xml," +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"><rect width="320" height="180" fill="#3b4a6b"/><text x="160" y="98" font-size="28" font-family="sans-serif" fill="#fff" text-anchor="middle">SAMPLE</text></svg>',
+  );
+
+// 配信中の選手カードのサンプル。画面と同じ描画を使い、操作はできないようにする
+const renderSampleCard = () => {
+  const card = renderPlayerCard(
+    {
+      name: "サンプル選手",
+      tier: "Core",
+      role: "MID",
+      channels: [
+        {
+          platform: "twitch",
+          channelUrl: "https://example.com/",
+          state: "live",
+          streams: [{ title: "配信タイトルの例", url: "https://example.com/", ltk: true, thumbnailUrl: SAMPLE_THUMB }],
+        },
+        { platform: "youtube", channelUrl: "https://example.com/", state: "offline", streams: [] },
+      ],
+    },
+    "sample",
+  );
+  card.setAttribute("inert", "");
+  return h("div", { class: "help-sample" }, card);
+};
 
 const section = (title: string, ...body: (Node | string)[]) =>
   h("section", { class: "help-section" }, h("h3", {}, title), ...body);
@@ -21,6 +52,7 @@ export function renderHelp(storage?: Parameters<typeof shouldAutoShowHelp>[0]) {
       section("このサイトについて", h("p", {}, "LTK 出場者の配信状況を一覧で確かめられます。配信中かどうかと、何を配信しているかが分かります。")),
       section(
         "選手カードの見方",
+        renderSampleCard(),
         iconLine(
           h("span", { class: "live-badge help-live", "aria-hidden": "true" }, "LIVE"),
           "配信中の選手のアイコンに付きます。サムネイルは配信の画面で、押すと配信ページを開きます。",
@@ -32,7 +64,7 @@ export function renderHelp(storage?: Parameters<typeof shouldAutoShowHelp>[0]) {
       ),
       section(
         "フィルタの使い方",
-        h("p", {}, "簡易絞り込みで、チーム・階級・「配信中のみ」・「LTK のみ」から絞れます。詳細フィルタでは、選手ごとに表示・非表示を選べます。"),
+        h("p", {}, "「絞り込み」で、チーム・階級・配信（「配信中」「LTK」）を選んで一覧を絞れます。複数選ぶと、すべてに当てはまる選手を表示します。「解除」で元に戻ります。「詳細フィルタ」では、選手ごとに表示・非表示を選べます。"),
       ),
       section(
         "お気に入りの使い方",

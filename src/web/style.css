@@ -1365,6 +1365,11 @@ a {
   transform: none;
 }
 
+.help-sample {
+  max-width: 260px;
+  margin: 0 0 8px;
+}
+
 .help-foot {
   display: flex;
   justify-content: flex-end;

@@ -503,6 +503,8 @@ type Schedule = {
 - 保存は `storage.ts` の `HELP_SEEN_KEY`（`ltk-stream-status:help-seen:v1`）、`shouldAutoShowHelp`、`markHelpSeen`。`shouldAutoShowHelp` は試し書きと削除が通り、かつキーが未設定のときだけ true（読めても書けない環境で毎回出るのを防ぐ）。キーの `v1` は保存形式の版で、文章を変えても上げない
 - 記録は `close` イベントで書く（閉じるボタンでも Esc でも発火。ボタンから開いた場合も同じ）。自動表示は `app.ts` が DOM 追加後に `autoOpen()` を呼ぶ
 - 内容は `<h3>` 見出し 5 つ。アイコンは `starIcon`、`platformIcon`、`.live-badge` を使い、`aria-hidden` にして意味は隣の文章で伝える
+- サンプルカード（AC-90）は `render.ts` の `renderPlayerCard` をそのまま使い、`help.ts` の固定の選手データから作る。サムネイルは SVG の data URI をコードに埋め込み、外部へ取りに行かない。カード全体に `inert` を付けてリンクを操作できなくし、お気に入りの `control` は渡さない（星は出さない）
+- フィルタの説明文（AC-91）は `filters.ts` の見出し「絞り込み」・チップ名・「解除」・「詳細フィルタ」と同じ語を使う。`tests/web/help.test.ts` が語の有無を確かめる
 - スタイルは `.changelog` と揃え、本文に `overflow-y: auto` を付けてモーダル内をスクロールさせ、狭い幅では余白を減らす
 
 ## ディレクトリ構成
