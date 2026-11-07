@@ -33,6 +33,7 @@ export type GenerateResult = {
   siteData: SiteData;
   state: FetchState;
   plan: YouTubePlan;
+  fallback: YouTubeResult["fallback"];
 };
 
 const fetchAvatars = async (fetcher: ((ids: string[]) => Promise<Map<string, string>>) | undefined, ids: string[]) => {
@@ -51,7 +52,7 @@ const channelKey = (c: ChannelInput) =>
   c.platform === "twitch" ? `twitch:${c.login.toLowerCase()}` : `youtube:${c.channelId}`;
 
 // 予算の指定がなければ、いつでも確認・取り直しをする
-const ALWAYS: YouTubePlan = { discover: true, fallback: true, reason: "予算の指定なし" };
+const ALWAYS: YouTubePlan = { discover: true, fallbackLimit: Infinity, reason: "予算の指定なし" };
 
 // データファイルを検証済みの前提で、配信状態を取得して site-data.json と state.json の中身を作る
 export async function generateSiteData(
@@ -83,7 +84,7 @@ export async function generateSiteData(
   const avatarTwitch = channels.flatMap((c) => (c.platform === "twitch" && needsAvatar(c) ? [c.login] : []));
   const avatarYouTube = channels.flatMap((c) => (c.platform === "youtube" && needsAvatar(c) ? [c.channelId] : []));
 
-  const emptyYouTube: YouTubeResult = { results: new Map(), live: {}, errors: [], discovered: false, fellBack: false };
+  const emptyYouTube: YouTubeResult = { results: new Map(), live: {}, errors: [], discovered: false, fallback: { failed: 0, attempted: 0 } };
   const [twitch, youtube, twitchAvatars, youtubeAvatars] = await Promise.all([
     twitchLogins.length > 0 ? fetchers.twitch(twitchLogins) : new Map<string, ChannelResult>(),
     youtubeIds.length > 0
@@ -182,18 +183,17 @@ export async function generateSiteData(
       exceeded: previous.quota.exceeded || usage.exceeded,
     },
     lastDiscoveryAt: youtube.discovered ? nowIso : previous.lastDiscoveryAt,
-    lastFallbackAt: youtube.fellBack ? nowIso : previous.lastFallbackAt,
     avatarsFetchedAt: due ? nowIso : previous.avatarsFetchedAt,
     youtubeLive: youtube.live,
     youtubeErrors: youtube.errors,
     avatars,
   };
   // 値が undefined のキーは出力しない
-  for (const key of ["lastDiscoveryAt", "lastFallbackAt", "avatarsFetchedAt"] as const) {
+  for (const key of ["lastDiscoveryAt", "avatarsFetchedAt"] as const) {
     if (state[key] === undefined) delete state[key];
   }
 
-  return { siteData, state, plan };
+  return { siteData, state, plan, fallback: youtube.fallback };
 }
 
 export const requiredSecrets = (teams: TeamsFile) => {

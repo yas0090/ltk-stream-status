@@ -46,7 +46,7 @@ async function main() {
   const twitchCredentials = { clientId: env.TWITCH_CLIENT_ID!, clientSecret: env.TWITCH_CLIENT_SECRET! };
   const getTwitchToken = createTwitchTokenProvider(twitchCredentials);
   const youtube = createYouTubeClient(env.YOUTUBE_API_KEY ?? "");
-  const { siteData, state, plan } = await generateSiteData(
+  const { siteData, state, plan, fallback } = await generateSiteData(
     teams,
     keywords,
     {
@@ -67,7 +67,9 @@ async function main() {
   const count = (state: string) => channels.filter((c) => c.state === state).length;
   console.log(`${values.out} を書き出しました（配信中 ${count("live")} / 配信なし ${count("offline")} / 取得失敗 ${count("error")}）`);
   console.log(
-    `YouTube: 新しい配信の確認 ${plan.discover ? "あり" : "なし"}・取り直し ${plan.fallback ? "可" : "不可"}（${plan.reason}）。` +
+    `YouTube: 新しい配信の確認 ${plan.discover ? "あり" : "なし"}・${
+      plan.discover ? `取り直し ${fallback.attempted}/${fallback.failed} 件（枠 ${plan.fallbackLimit}）` : "取り直し なし"
+    }（${plan.reason}）。` +
       `今回の使用量 ${youtube.used}、今日（太平洋時間 ${state.quota.day}）の合計 ${state.quota.used}${state.quota.exceeded ? "（超過）" : ""}`,
   );
 }

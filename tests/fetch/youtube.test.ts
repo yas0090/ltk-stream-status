@@ -69,7 +69,7 @@ const request = (overrides: Partial<YouTubeRequest> = {}): YouTubeRequest => ({
   channelIds: [CH_A, CH_B],
   previousLive: {},
   previousErrors: [],
-  plan: { discover: true, fallback: true },
+  plan: { discover: true, fallbackLimit: Infinity },
   ...overrides,
 });
 
@@ -190,7 +190,7 @@ describe("fetchYouTube: 新しい配信の確認", () => {
     expect(state(CH_A)).toBe("live");
     expect(apiCalls[0]?.pathname).toBe("/youtube/v3/playlistItems");
     expect(apiCalls[0]?.searchParams.get("playlistId")).toBe(`UU${"a".repeat(22)}`);
-    expect(result.fellBack).toBe(true);
+    expect(result.fallback).toEqual({ failed: 1, attempted: 1 });
   });
 
   it("取り直しにも失敗したチャンネルだけ error になる（AC-22, AC-40）", async () => {
@@ -200,19 +200,49 @@ describe("fetchYouTube: 新しい配信の確認", () => {
     expect(result.errors).toEqual([CH_A]);
   });
 
-  it("取り直しが許されていなければ、RSS に失敗したチャンネルは error", async () => {
+  it("枠が 0 なら取り直さず、RSS に失敗したチャンネルは error", async () => {
     const { state, apiCalls, result } = await run(
       { feeds: { [CH_A]: 404, [CH_B]: feed([]) } },
-      { plan: { discover: true, fallback: false } },
+      { plan: { discover: true, fallbackLimit: 0 } },
     );
     expect(state(CH_A)).toBe("error");
     expect(apiCalls).toHaveLength(0);
-    expect(result.fellBack).toBe(false);
+    expect(result.fallback).toEqual({ failed: 1, attempted: 0 });
   });
 
-  it("RSS がすべて成功したときは、取り直しをしたことにしない", async () => {
+  it("RSS がすべて成功したときは、取り直しの件数は 0", async () => {
     const { result } = await run({ feeds: { [CH_A]: feed([]), [CH_B]: feed([]) } });
-    expect(result.fellBack).toBe(false);
+    expect(result.fallback).toEqual({ failed: 0, attempted: 0 });
+  });
+
+  it("枠が失敗数より多ければ全件取り直す", async () => {
+    const { result, apiCalls } = await run(
+      { feeds: { [CH_A]: 404, [CH_B]: 404 } },
+      { plan: { discover: true, fallbackLimit: 5 } },
+    );
+    expect(result.fallback).toEqual({ failed: 2, attempted: 2 });
+    expect(apiCalls.filter((u) => u.pathname === "/youtube/v3/playlistItems")).toHaveLength(2);
+  });
+
+  it("枠が失敗数より少なければ枠の数だけ取り直し、残りは error", async () => {
+    const { result, state } = await run(
+      { feeds: { [CH_A]: 404, [CH_B]: 404 }, uploads: { [CH_A]: [], [CH_B]: [] } },
+      { plan: { discover: true, fallbackLimit: 1 } },
+    );
+    expect(result.fallback).toEqual({ failed: 2, attempted: 1 });
+    expect(state(CH_A)).toBe("offline");
+    expect(state(CH_B)).toBe("error");
+  });
+
+  it("枠を超えるときは、前回 error だったチャンネルを先に取り直す", async () => {
+    const { result, state, apiCalls } = await run(
+      { feeds: { [CH_A]: 404, [CH_B]: 404 }, uploads: { [CH_A]: [], [CH_B]: [] } },
+      { previousErrors: [CH_B], plan: { discover: true, fallbackLimit: 1 } },
+    );
+    expect(apiCalls[0]?.searchParams.get("playlistId")).toBe(`UU${"b".repeat(22)}`);
+    expect(state(CH_B)).toBe("offline");
+    expect(state(CH_A)).toBe("error");
+    expect(result.errors).toEqual([CH_A]);
   });
 
   it("videos.list が失敗したら、問い合わせたチャンネルが error になる", async () => {
@@ -259,7 +289,7 @@ describe("fetchYouTube: 終了チェック（節約 A）", () => {
   it("新しい配信の確認をしない回も、終了チェックは行う", async () => {
     const { result, rssCalls } = await run(
       { videos: [{ id: "v1", live: "live", duration: "P0D" }] },
-      { previousLive: { [CH_A]: ["v1"] }, previousErrors: [CH_B], plan: { discover: false, fallback: false } },
+      { previousLive: { [CH_A]: ["v1"] }, previousErrors: [CH_B], plan: { discover: false, fallbackLimit: 0 } },
     );
     expect(rssCalls).toHaveLength(0);
     expect(result.results.get(CH_A)?.state).toBe("live");

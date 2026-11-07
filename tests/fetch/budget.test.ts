@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { parse } from "yaml";
 import { describe, expect, it } from "vitest";
-import { avatarsDue, parseBudget, planYouTube } from "../../src/fetch/budget";
+import { avatarsDue, fallbackAllowance, parseBudget, planYouTube } from "../../src/fetch/budget";
 import { initialState, type FetchState } from "../../src/fetch/state";
 import { DataValidationError } from "../../src/shared/schema";
 
@@ -17,6 +17,8 @@ const state = (now: Date, used: number, overrides: Partial<FetchState> = {}): Fe
   return { ...base, quota: { ...base.quota, used }, ...overrides };
 };
 
+const base = { limit: 9000, reservePerRun: 10, runIntervalMinutes: 5, peakHours: { start: 16, end: 3 }, peakDiscoveryMinutes: 5 };
+
 describe("data/youtube-budget.yaml", () => {
   it("同梱の設定は正しい", () => {
     expect(budget.limit).toBe(9000);
@@ -25,12 +27,19 @@ describe("data/youtube-budget.yaml", () => {
 
   it("upTo が小さい順でないか、limit を超えるとエラー", () => {
     const tiers = [
-      { upTo: 5000, discoveryMinutes: 5, fallbackMinutes: 5 },
-      { upTo: 3000, discoveryMinutes: 10, fallbackMinutes: null },
+      { upTo: 5000, discoveryMinutes: 5 },
+      { upTo: 3000, discoveryMinutes: 10 },
     ];
-    const base = { limit: 9000, peakHours: { start: 16, end: 3 }, peakDiscoveryMinutes: 5 };
     expect(() => parseBudget({ ...base, tiers })).toThrow(DataValidationError);
     expect(() => parseBudget({ ...base, limit: 4000, tiers: [tiers[0]] })).toThrow(/limit/);
+  });
+
+  it("fallbackMinutes が残っていたり、reservePerRun・runIntervalMinutes が不正だとエラー", () => {
+    const tiers = [{ upTo: 5000, discoveryMinutes: 5 }];
+    expect(parseBudget({ ...base, tiers }).reservePerRun).toBe(10);
+    expect(() => parseBudget({ ...base, tiers: [{ ...tiers[0], fallbackMinutes: 5 }] })).toThrow(DataValidationError);
+    expect(() => parseBudget({ ...base, tiers, reservePerRun: -1 })).toThrow(DataValidationError);
+    expect(() => parseBudget({ ...base, tiers, runIntervalMinutes: 0 })).toThrow(DataValidationError);
   });
 });
 
@@ -52,23 +61,52 @@ describe("planYouTube（AC-21, AC-43）", () => {
     expect(planYouTube(state(NIGHT, 8500, { lastDiscoveryAt: ago(NIGHT, 5) }), budget, NIGHT).discover).toBe(true);
   });
 
-  it("取り直しは段階の間隔ごと。8,000 以上は取り直さない", () => {
-    expect(planYouTube(state(DAY, 0), budget, DAY)).toMatchObject({ discover: true, fallback: true });
-    const recent = { lastFallbackAt: ago(DAY, 10) };
-    expect(planYouTube(state(DAY, 7500, recent), budget, DAY)).toMatchObject({ discover: true, fallback: false });
-    expect(planYouTube(state(DAY, 7500, { lastFallbackAt: ago(DAY, 15) }), budget, DAY).fallback).toBe(true);
-    expect(planYouTube(state(DAY, 8000), budget, DAY)).toMatchObject({ discover: true, fallback: false });
-    expect(planYouTube(state(DAY, 8500), budget, DAY)).toMatchObject({ discover: true, fallback: false });
+  it("取り直しの枠は、確認する回に残りの使用量と実行回数から決まる", () => {
+    // DAY = 太平洋時間 2026-10-25 18:00 → 残り 6 時間 = 72 回、(9000 - 0 - 720) ÷ 72 = 115
+    expect(planYouTube(state(DAY, 0), budget, DAY)).toMatchObject({ discover: true, fallbackLimit: 115 });
+    // 確認しない回は枠 0
+    const recent = { lastDiscoveryAt: ago(DAY, 1) };
+    expect(planYouTube(state(DAY, 0, recent), budget, DAY)).toMatchObject({ discover: false, fallbackLimit: 0 });
   });
 
   it("上限（9,000）以上、またはクォータ超過の応答を受けたら止める", () => {
-    expect(planYouTube(state(NIGHT, 9000), budget, NIGHT)).toMatchObject({ discover: false, fallback: false });
+    expect(planYouTube(state(NIGHT, 9000), budget, NIGHT)).toMatchObject({ discover: false, fallbackLimit: 0 });
     const exceeded = { ...state(NIGHT, 100), quota: { day: "2026-10-26", used: 100, exceeded: true } };
-    expect(planYouTube(exceeded, budget, NIGHT)).toMatchObject({ discover: false, fallback: false });
+    expect(planYouTube(exceeded, budget, NIGHT)).toMatchObject({ discover: false, fallbackLimit: 0 });
   });
 
   it("前回の確認の記録がなければ確認する", () => {
     expect(planYouTube(state(DAY, 0), budget, DAY).discover).toBe(true);
+  });
+});
+
+describe("fallbackAllowance（AC-40）", () => {
+  // 2026-11-07 23:00 UTC = 太平洋時間 15:00（冬時間）。リセットまで 9 時間 = 108 回
+  const WINTER = new Date("2026-11-07T23:00:00Z");
+
+  it("Issue の試算: 使用量 1,800・残り 108 回・予約 10 → 56", () => {
+    expect(fallbackAllowance(1800, budget, WINTER)).toBe(56);
+  });
+
+  it("残りの使用量が予約分に足りなければ枠 0（負にならない）", () => {
+    expect(fallbackAllowance(8000, budget, WINTER)).toBe(0);
+    expect(fallbackAllowance(9000, budget, WINTER)).toBe(0);
+    expect(fallbackAllowance(12000, budget, WINTER)).toBe(0);
+  });
+
+  it("リセット直前は残り 1 回として計算し、0 で割らない", () => {
+    expect(fallbackAllowance(1000, budget, new Date("2026-11-08T07:59:30Z"))).toBe(7990);
+  });
+
+  it("日付が変わった直後は 1 日分（288 回）で割る", () => {
+    // (9000 - 0 - 2880) ÷ 288 = 21.25
+    expect(fallbackAllowance(0, budget, new Date("2026-11-08T08:00:00Z"))).toBe(21);
+  });
+
+  it("夏時間の切り替え日は 23 時間（276 回）・25 時間（300 回）で割る", () => {
+    // (9000 - 2760) ÷ 276 = 22.6、(9000 - 3000) ÷ 300 = 20
+    expect(fallbackAllowance(0, budget, new Date("2026-03-08T08:00:00Z"))).toBe(22);
+    expect(fallbackAllowance(0, budget, new Date("2026-11-01T07:00:00Z"))).toBe(20);
   });
 });
 

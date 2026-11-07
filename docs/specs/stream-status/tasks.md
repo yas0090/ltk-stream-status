@@ -204,3 +204,18 @@ requirements.md（US10、AC-64〜76 を追加）と design.md（お気に入り�
 - [x] 13-5. 仕様書と `data/changelog.yaml`
 - [ ] 13-6. PR のプレビューで、星の見た目、スマートフォン幅（360px）での欄の表示、キーボード操作を確かめる（手動）
 
+## 14. YouTube の取り直しを件数で配分する（Issue #36）
+
+RSS が特定の時間帯に 404 になる状態が続き、固定間隔の取り直しだと 2 回に 1 回は取り直されなかったため、requirements.md（AC-40、AC-43）と design.md（「YouTube のクォータ管理」）を更新した。
+
+- [x] 14-1. `youtube-budget.yaml` に `reservePerRun`・`runIntervalMinutes` を加え、`fallbackMinutes` を削除する（AC-43）
+  - テスト: 同梱の設定が読めること、`fallbackMinutes` が残っているとエラー、値の検証
+- [x] 14-2. 太平洋時間 0 時までの分数と、取り直しの枠を求める（AC-40, AC-43）
+  - `minutesUntilPacificMidnight`（`state.ts`）、`fallbackAllowance` と `planYouTube` の `fallbackLimit`（`budget.ts`）
+  - テスト: 枠 0、試算の値（56）、リセット直前・直後、冬時間・夏時間、夏時間の切り替え日（23・25 時間）、確認しない回と停止中は 0
+- [x] 14-3. 枠までの取り直しと、前回 error の優先（AC-40）
+  - テスト: 枠が失敗数より多い・少ない、前回 error が先、枠 0、クォータ超過で残りが error
+- [x] 14-4. `lastFallbackAt` を廃止し、実行ログに件数を出す（AC-43）
+  - テスト: 古い `state.json` を読めること、出力に `lastFallbackAt` が出ないこと
+- [ ] 14-5. 公開後、実行ログの `取り直し n/m 件（枠 k）` と使用量を見て、`reservePerRun` を調整する（手動）
+
