@@ -4,6 +4,7 @@ import {
   jstHour,
   loadState,
   minutesSince,
+  minutesUntilPacificMidnight,
   pacificDate,
   parseState,
   withCurrentQuotaDay,
@@ -42,6 +43,34 @@ describe("state.json（AC-43）", () => {
     expect(withCurrentQuotaDay(state, NOW).quota).toEqual({ day: "2026-10-25", used: 0, exceeded: false });
     const today = { ...initialState(NOW), quota: { day: "2026-10-25", used: 5000, exceeded: false } };
     expect(withCurrentQuotaDay(today, NOW).quota.used).toBe(5000);
+  });
+
+  it("太平洋時間の次の 0 時までの分数（冬時間・夏時間の通常の日）", () => {
+    // 冬時間（PST = UTC-8）: 0 時 = 08:00 UTC
+    expect(minutesUntilPacificMidnight(new Date("2026-01-15T08:00:00Z"))).toBe(1440);
+    expect(minutesUntilPacificMidnight(new Date("2026-01-15T20:00:00Z"))).toBe(720);
+    // 夏時間（PDT = UTC-7）: 0 時 = 07:00 UTC
+    expect(minutesUntilPacificMidnight(new Date("2026-07-01T07:00:00Z"))).toBe(1440);
+    expect(minutesUntilPacificMidnight(NOW)).toBe(6 * 60); // 太平洋時間 18:00
+  });
+
+  it("太平洋時間の日付の変わり目の前後", () => {
+    expect(minutesUntilPacificMidnight(new Date("2026-11-08T07:59:00Z"))).toBe(1);
+    expect(minutesUntilPacificMidnight(new Date("2026-11-08T08:00:00Z"))).toBe(1440);
+  });
+
+  it("夏時間の切り替え日は 23 時間・25 時間の日として数える", () => {
+    // 2026-03-08 02:00 に夏時間へ（23 時間の日）
+    expect(minutesUntilPacificMidnight(new Date("2026-03-08T08:00:00Z"))).toBe(23 * 60);
+    // 2026-11-01 02:00 に冬時間へ（25 時間の日）
+    expect(minutesUntilPacificMidnight(new Date("2026-11-01T07:00:00Z"))).toBe(25 * 60);
+  });
+
+  it("lastFallbackAt が残っている古い state.json も読める", () => {
+    const old = { ...initialState(NOW), lastFallbackAt: "2026-10-26T00:00:00Z" };
+    const parsed = parseState(old, NOW);
+    expect(parsed.quota).toEqual(old.quota);
+    expect(parsed).not.toHaveProperty("lastFallbackAt");
   });
 
   it("経過時間（分）を求める。記録がなければ無限大", () => {

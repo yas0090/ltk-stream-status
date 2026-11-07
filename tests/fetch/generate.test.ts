@@ -44,7 +44,7 @@ const youtubeResult = (request: YouTubeRequest, result: ChannelResult) => ({
   live: result.state === "live" ? Object.fromEntries(request.channelIds.map((id) => [id, ["v-live"]])) : {},
   errors: result.state === "error" ? [...request.channelIds] : [],
   discovered: request.plan.discover,
-  fellBack: false,
+  fallback: { failed: 0, attempted: 0 },
 });
 
 const fetchers = (twitch: ChannelResult, youtube: ChannelResult): Fetchers => ({
@@ -110,7 +110,7 @@ describe("generateSiteData", () => {
   it("取得結果にないチャンネルは取得失敗として扱う", async () => {
     const { siteData } = await gen({
       twitch: async () => new Map(),
-      youtube: async () => ({ results: new Map(), live: {}, errors: [], discovered: true, fellBack: false }),
+      youtube: async () => ({ results: new Map(), live: {}, errors: [], discovered: true, fallback: { failed: 0, attempted: 0 } }),
     });
     expect(siteData.teams[0]?.players[0]?.channels.map((c) => c.state)).toEqual(["error", "error"]);
   });
@@ -178,8 +178,17 @@ describe("前回の結果の引き継ぎとクォータ（AC-43）", () => {
       channelIds: [YT],
       previousLive: { [YT]: ["v1"] },
       previousErrors: ["UCother"],
-      plan: { discover: true, fallback: true },
+      // リセットまで 19 時間 = 228 回、(9000 - 0 - 10 × 228) ÷ 228 = 29
+      plan: { discover: true, fallbackLimit: 29 },
     });
+  });
+
+  it("古い state.json の lastFallbackAt は読んでも引き継がない", async () => {
+    const { state } = await gen(
+      fetchers(offline, offline),
+      { budget, previousState: previous({ lastFallbackAt: NOW.toISOString() }) },
+    );
+    expect(state).not.toHaveProperty("lastFallbackAt");
   });
 
   it("使用量を前回の合計に足し、確認した時刻と配信中の動画 ID を記録する", async () => {

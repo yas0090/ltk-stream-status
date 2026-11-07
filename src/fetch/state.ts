@@ -7,7 +7,6 @@ const fetchStateSchema = z.object({
   // day は太平洋時間の日付。YouTube のクォータはこの日付ごとにリセットされる
   quota: z.object({ day: z.string(), used: z.number().int().nonnegative(), exceeded: z.boolean() }),
   lastDiscoveryAt: z.string().optional(),
-  lastFallbackAt: z.string().optional(),
   avatarsFetchedAt: z.string().optional(),
   // 配信中だった YouTube のチャンネル ID → 動画 ID（終了チェックに使う）
   youtubeLive: z.record(z.string(), z.array(z.string())),
@@ -35,6 +34,19 @@ export function parseState(input: unknown, now: Date): FetchState {
 
 export const pacificDate = (now: Date) =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "America/Los_Angeles", dateStyle: "short" }).format(now);
+
+// 次の太平洋時間 0 時（YouTube のクォータのリセット）までの分数。夏時間の切り替え日（23・25 時間の日）も実際の時刻で求める
+export function minutesUntilPacificMidnight(now: Date): number {
+  const [y, m, d] = pacificDate(now).split("-").map(Number) as [number, number, number];
+  const utcMidnight = Date.UTC(y, m - 1, d + 1);
+  // 切り替えは午前 2 時なので、翌日の 0 時の 8 時間後（UTC）の時点で判定すれば、0 時と同じオフセットになる
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", timeZoneName: "longOffset" }).formatToParts(
+    new Date(utcMidnight + 8 * 3_600_000),
+  );
+  const match = /GMT([+-])(\d{2}):(\d{2})/.exec(parts.find((p) => p.type === "timeZoneName")?.value ?? "");
+  const offsetMs = match ? (match[1] === "-" ? -1 : 1) * (Number(match[2]) * 60 + Number(match[3])) * 60_000 : -8 * 3_600_000;
+  return (utcMidnight - offsetMs - now.getTime()) / 60_000;
+}
 
 export const jstHour = (now: Date) =>
   Number(new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Tokyo", hour: "numeric", hourCycle: "h23" }).format(now));

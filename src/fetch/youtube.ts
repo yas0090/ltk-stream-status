@@ -134,7 +134,7 @@ export type YouTubeRequest = {
   previousLive: Readonly<Record<string, readonly string[]>>;
   // 前回の新しい配信の確認で失敗したチャンネル（確認しない回は引き継ぐ）
   previousErrors: readonly string[];
-  plan: { discover: boolean; fallback: boolean };
+  plan: { discover: boolean; fallbackLimit: number };
 };
 
 export type YouTubeResult = {
@@ -142,7 +142,8 @@ export type YouTubeResult = {
   live: Record<string, string[]>;
   errors: string[];
   discovered: boolean;
-  fellBack: boolean;
+  // RSS に失敗した数と、そのうち実際に取り直した数
+  fallback: { failed: number; attempted: number };
 };
 
 // 配信中だったチャンネルは終了チェックだけにし（節約 A）、それ以外は plan に従って新しい配信を確認する。
@@ -161,7 +162,7 @@ export async function fetchYouTube(
   for (const [channelId, videos] of Object.entries(previousLive)) for (const v of videos) owner.set(v, channelId);
 
   const errors = new Set<string>();
-  let fellBack = false;
+  const fallback = { failed: 0, attempted: 0 };
   const targets = ids.filter((id) => !(id in previousLive));
   const addCandidates = (channelId: string, videoIds: string[]) => videoIds.forEach((v) => owner.set(v, channelId));
 
@@ -175,22 +176,22 @@ export async function fetchYouTube(
         failed.push(channelId);
       }
     });
-    if (request.plan.fallback) {
-      fellBack = failed.length > 0;
-      for (const channelId of failed) {
-        if (client.exceeded) {
-          errors.add(channelId);
-          continue;
-        }
-        try {
-          addCandidates(channelId, await fetchUploads(channelId, client, now));
-        } catch (error) {
-          console.warn(String(error));
-          errors.add(channelId);
-        }
+    fallback.failed = failed.length;
+    // 枠を超えるときは、前回 error だったチャンネルを先に取り直す（同じチャンネルが失敗し続けないように）
+    const previousErrors = new Set(request.previousErrors);
+    const ordered = [...failed.filter((id) => previousErrors.has(id)), ...failed.filter((id) => !previousErrors.has(id))];
+    for (const channelId of ordered) {
+      if (fallback.attempted >= request.plan.fallbackLimit || client.exceeded) {
+        errors.add(channelId);
+        continue;
       }
-    } else {
-      failed.forEach((channelId) => errors.add(channelId));
+      fallback.attempted++;
+      try {
+        addCandidates(channelId, await fetchUploads(channelId, client, now));
+      } catch (error) {
+        console.warn(String(error));
+        errors.add(channelId);
+      }
     }
   } else {
     request.previousErrors.filter((id) => targets.includes(id)).forEach((id) => errors.add(id));
@@ -236,7 +237,7 @@ export async function fetchYouTube(
     live,
     errors: ids.filter((id) => errors.has(id) && !(id in live)),
     discovered: request.plan.discover,
-    fellBack,
+    fallback,
   };
 }
 
